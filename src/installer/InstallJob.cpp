@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / installer / InstallJob.cpp
-================================================================================
 #include "noty/installer/InstallJob.h"
 #include "noty/common/Logger.h"
 #include <algorithm>

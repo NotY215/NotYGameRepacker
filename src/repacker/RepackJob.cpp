@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / repacker / RepackJob.cpp
-================================================================================
 #include "noty/repacker/RepackJob.h"
 #include "noty/common/Logger.h"
 #include "noty/common/Constants.h"

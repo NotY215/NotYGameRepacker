@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / core / PerformanceMonitor.cpp
-================================================================================
 #include "noty/core/PerformanceMonitor.h"
 #include "noty/common/Logger.h"
 #include <windows.h>

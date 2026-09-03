@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / core / ResourceManager.cpp
-================================================================================
 #include "noty/core/ResourceManager.h"
 #include "noty/common/Logger.h"
 #include <windows.h>

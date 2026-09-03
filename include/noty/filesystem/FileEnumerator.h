@@ -4,6 +4,8 @@
 #include <string>
 #include <functional>
 #include <atomic>
+#include <mutex>
+#include <cstdint>
 
 namespace noty {
 
@@ -15,26 +17,21 @@ namespace noty {
         FileEnumerator();
         ~FileEnumerator();
 
-        // Main enumeration function
         void enumerateDirectory(const std::string& directory,
             bool recursive = true,
             bool includeHidden = false);
 
-        // Get results
         const std::vector<FileInfo>& getFiles() const { return m_files; }
         int64_t getTotalFiles() const { return m_totalFiles; }
         int64_t getTotalSize() const { return m_totalSize; }
         int64_t getDirectoryCount() const { return m_directoryCount; }
 
-        // Callbacks
         void setProgressCallback(ProgressCallback callback);
         void setFileCallback(FileCallback callback);
 
-        // Cancellation support
         void cancel();
         bool isCancelled() const { return m_cancelled; }
 
-        // Statistics
         struct Statistics {
             int64_t totalFiles = 0;
             int64_t totalSize = 0;
@@ -59,7 +56,7 @@ namespace noty {
         ProgressCallback m_progressCallback;
         FileCallback m_fileCallback;
 
-        std::mutex m_mutex;
+        mutable std::mutex m_mutex;
     };
 
 } // namespace noty

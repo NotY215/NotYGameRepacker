@@ -1,6 +1,3 @@
-================================================================================
-FILE: apps / Repacker / RepackerApplication.cpp(Final Integration)
-================================================================================
 #include "RepackerApplication.h"
 #include "MainWindow.h"
 #include "noty/common/Logger.h"

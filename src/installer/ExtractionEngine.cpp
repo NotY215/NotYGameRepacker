@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / installer / ExtractionEngine.cpp
-================================================================================
 #include "noty/installer/ExtractionEngine.h"
 #include "noty/common/Logger.h"
 #include "noty/common/Constants.h"

@@ -1,8 +1,10 @@
 #include "noty/filesystem/FileEnumerator.h"
 #include "noty/common/Logger.h"
+#include "noty/common/Error.h"
 #include <filesystem>
 #include <thread>
 #include <chrono>
+#include <windows.h>
 
 namespace fs = std::filesystem;
 
@@ -32,14 +34,11 @@ namespace noty {
             throw Error("Path is not a directory: " + directory);
         }
 
-        // Start enumeration
         auto startTime = std::chrono::steady_clock::now();
 
         if (recursive) {
             enumerateRecursive(directory, directory, includeHidden);
-        }
-        else {
-            // Non-recursive enumeration
+        } else {
             for (const auto& entry : fs::directory_iterator(directory)) {
                 if (m_cancelled) break;
 
@@ -50,8 +49,7 @@ namespace noty {
                             FileInfo info(entry.path().string(), 0, true);
                             m_files.push_back(info);
                         }
-                    }
-                    else if (entry.is_regular_file()) {
+                    } else if (entry.is_regular_file()) {
                         auto size = entry.file_size();
                         if (shouldIncludeFile(entry.path().string(), includeHidden)) {
                             FileInfo info(entry.path().string(), size, false);
@@ -64,8 +62,7 @@ namespace noty {
                             }
                         }
                     }
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception& e) {
                     Logger::instance().warning("Error processing entry: " + std::string(e.what()));
                 }
             }
@@ -102,12 +99,10 @@ namespace noty {
 
                         if (shouldIncludeFile(path, includeHidden)) {
                             FileInfo info(path, 0, true);
-                            // Calculate relative path
                             info.relativePath = fs::relative(path, rootPath).string();
                             m_files.push_back(info);
                         }
-                    }
-                    else if (entry.is_regular_file()) {
+                    } else if (entry.is_regular_file()) {
                         auto size = entry.file_size();
 
                         if (shouldIncludeFile(path, includeHidden)) {
@@ -121,19 +116,16 @@ namespace noty {
                                 m_fileCallback(info);
                             }
 
-                            // Update progress periodically
                             if (m_totalFiles % 100 == 0 && m_progressCallback) {
                                 m_progressCallback(m_totalFiles, m_totalSize);
                             }
                         }
                     }
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception& e) {
                     Logger::instance().warning("Error processing file: " + std::string(e.what()));
                 }
             }
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             Logger::instance().error("Enumeration error: " + std::string(e.what()));
             throw Error("Failed to enumerate directory: " + std::string(e.what()));
         }
@@ -141,13 +133,11 @@ namespace noty {
 
     bool FileEnumerator::shouldIncludeFile(const std::string& path, bool includeHidden) {
         if (!includeHidden) {
-            // Check if file/directory is hidden
             fs::path p(path);
             auto filename = p.filename().string();
             if (!filename.empty() && filename[0] == '.') {
                 return false;
             }
-            // Check Windows hidden attribute
             DWORD attributes = GetFileAttributesA(path.c_str());
             if (attributes != INVALID_FILE_ATTRIBUTES &&
                 (attributes & FILE_ATTRIBUTE_HIDDEN)) {

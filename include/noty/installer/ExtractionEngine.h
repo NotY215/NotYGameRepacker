@@ -1,6 +1,3 @@
-================================================================================
-FILE: include / noty / installer / ExtractionEngine.h
-================================================================================
 #pragma once
 #include "../common/Common.h"
 #include "../package/Manifest.h"

@@ -1,10 +1,11 @@
 #include "noty/hashing/Hasher.h"
 #include "noty/common/Logger.h"
 #include <blake3.h>
-#include <openssl/sha.h>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 
 namespace noty {
 
@@ -21,7 +22,6 @@ namespace noty {
             return "";
         }
 
-        // Get file size
         file.seekg(0, std::ios::end);
         size_t size = static_cast<size_t>(file.tellg());
         file.seekg(0, std::ios::beg);
@@ -40,20 +40,13 @@ namespace noty {
     }
 
     std::string Hasher::hashData(const uint8_t* data, size_t size) const {
-        switch (m_algorithm) {
-        case Algorithm::BLAKE3:
-            return hashBlake3(data, size);
-        case Algorithm::SHA256:
-            return hashSha256(data, size);
-        default:
-            Logger::instance().error("Unknown hashing algorithm");
-            return "";
-        }
+        // Only BLAKE3 supported now (removed OpenSSL dependency)
+        return hashBlake3(data, size);
     }
 
     bool Hasher::hashFileStreaming(const std::string& filename,
         std::function<void(size_t, size_t)> progress) const {
-        const size_t BUFFER_SIZE = 1024 * 1024; // 1MB buffer
+        const size_t BUFFER_SIZE = 1024 * 1024;
 
         std::ifstream file(filename, std::ios::binary);
         if (!file.is_open()) {
@@ -61,7 +54,6 @@ namespace noty {
             return false;
         }
 
-        // Get file size
         file.seekg(0, std::ios::end);
         size_t totalSize = static_cast<size_t>(file.tellg());
         file.seekg(0, std::ios::beg);
@@ -69,7 +61,6 @@ namespace noty {
         size_t processed = 0;
         std::vector<uint8_t> buffer(BUFFER_SIZE);
 
-        // For BLAKE3
         blake3_hasher hasher;
         blake3_hasher_init(&hasher);
 
@@ -87,9 +78,6 @@ namespace noty {
             }
         }
 
-        // Finalize (but we don't need the result for streaming)
-        // The caller may want to verify the result separately
-
         file.close();
         return true;
     }
@@ -100,7 +88,6 @@ namespace noty {
             return false;
         }
 
-        // Case-insensitive comparison
         std::transform(actualHash.begin(), actualHash.end(), actualHash.begin(), ::tolower);
         std::string expectedLower = expectedHash;
         std::transform(expectedLower.begin(), expectedLower.end(), expectedLower.begin(), ::tolower);
@@ -109,14 +96,7 @@ namespace noty {
     }
 
     std::string Hasher::getAlgorithmName() const {
-        switch (m_algorithm) {
-        case Algorithm::BLAKE3:
-            return "BLAKE3";
-        case Algorithm::SHA256:
-            return "SHA-256";
-        default:
-            return "Unknown";
-        }
+        return "BLAKE3";
     }
 
     std::string Hasher::hashBlake3(const uint8_t* data, size_t size) const {
@@ -127,12 +107,6 @@ namespace noty {
         blake3_hasher_finalize(&hasher, hash, BLAKE3_OUT_LEN);
 
         return bytesToHex(hash, BLAKE3_OUT_LEN);
-    }
-
-    std::string Hasher::hashSha256(const uint8_t* data, size_t size) const {
-        uint8_t hash[SHA256_DIGEST_LENGTH];
-        SHA256(data, size, hash);
-        return bytesToHex(hash, SHA256_DIGEST_LENGTH);
     }
 
     std::string Hasher::bytesToHex(const uint8_t* bytes, size_t size) {

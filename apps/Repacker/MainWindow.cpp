@@ -1,6 +1,3 @@
-================================================================================
-FILE: apps / Repacker / MainWindow.cpp
-================================================================================
 #include "MainWindow.h"
 #include "noty/common/Constants.h"
 #include "noty/common/Logger.h"

@@ -1,6 +1,3 @@
-================================================================================
-FILE: include / noty / installer / InstallJob.h
-================================================================================
 #pragma once
 #include "../common/Common.h"
 #include "../package/Manifest.h"

@@ -9,31 +9,23 @@ namespace noty {
     class Hasher {
     public:
         enum class Algorithm {
-            BLAKE3,
-            SHA256
+            BLAKE3
         };
 
         Hasher(Algorithm algorithm = Algorithm::BLAKE3);
         ~Hasher();
 
-        // Hash a file
         std::string hashFile(const std::string& filename) const;
-
-        // Hash data buffer
         std::string hashData(const std::vector<uint8_t>& data) const;
         std::string hashData(const uint8_t* data, size_t size) const;
 
-        // Hash streaming (for large files)
         bool hashFileStreaming(const std::string& filename,
             std::function<void(size_t bytesProcessed, size_t totalBytes)> progress = nullptr) const;
 
-        // Verify file against expected hash
         bool verifyFile(const std::string& filename, const std::string& expectedHash) const;
 
-        // Get algorithm name
         std::string getAlgorithmName() const;
 
-        // Static utility functions
         static std::string bytesToHex(const uint8_t* bytes, size_t size);
         static std::vector<uint8_t> hexToBytes(const std::string& hex);
 
@@ -41,7 +33,6 @@ namespace noty {
         Algorithm m_algorithm;
 
         std::string hashBlake3(const uint8_t* data, size_t size) const;
-        std::string hashSha256(const uint8_t* data, size_t size) const;
     };
 
 } // namespace noty

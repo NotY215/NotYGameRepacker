@@ -1,6 +1,3 @@
-================================================================================
-FILE: include / noty / installer / InstallEngine.h
-================================================================================
 #pragma once
 #include "InstallJob.h"
 #include "../common/Common.h"

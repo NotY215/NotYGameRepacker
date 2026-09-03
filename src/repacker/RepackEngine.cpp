@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / repacker / RepackEngine.cpp
-================================================================================
 #include "noty/repacker/RepackEngine.h"
 #include "noty/repacker/PackageBuilder.h"
 #include "noty/common/Logger.h"

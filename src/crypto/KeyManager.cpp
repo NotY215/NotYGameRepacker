@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / crypto / KeyManager.cpp
-================================================================================
 #include "noty/crypto/KeyManager.h"
 #include "noty/common/Logger.h"
 #include <windows.h>

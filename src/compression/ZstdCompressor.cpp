@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / compression / ZstdCompressor.cpp
-================================================================================
 #include "noty/compression/ZstdCompressor.h"
 #include "noty/common/Logger.h"
 #include <zstd.h>

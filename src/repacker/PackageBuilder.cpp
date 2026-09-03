@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / repacker / PackageBuilder.cpp
-================================================================================
 #include "noty/repacker/PackageBuilder.h"
 #include "noty/common/Logger.h"
 #include "noty/common/Constants.h"

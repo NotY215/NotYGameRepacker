@@ -1,6 +1,3 @@
-================================================================================
-FILE: apps / Setup / SetupApplication.cpp(Final Integration)
-================================================================================
 #include "SetupApplication.h"
 #include "SetupWindow.h"
 #include "noty/common/Logger.h"

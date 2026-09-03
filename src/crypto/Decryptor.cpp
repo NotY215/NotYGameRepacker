@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / crypto / Decryptor.cpp
-================================================================================
 #include "noty/crypto/Decryptor.h"
 #include "noty/common/Logger.h"
 #include <windows.h>

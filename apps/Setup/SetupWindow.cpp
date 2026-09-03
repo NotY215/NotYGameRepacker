@@ -1,6 +1,3 @@
-================================================================================
-FILE: apps / Setup / SetupWindow.cpp
-================================================================================
 #include "SetupWindow.h"
 #include "noty/common/Constants.h"
 #include "noty/common/Logger.h"

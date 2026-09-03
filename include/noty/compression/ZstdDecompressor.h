@@ -1,6 +1,3 @@
-================================================================================
-FILE: include / noty / compression / ZstdDecompressor.h
-================================================================================
 #pragma once
 #include "../common/Common.h"
 #include <string>

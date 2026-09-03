@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <ctime>
 
 namespace noty {
 
@@ -20,7 +21,12 @@ namespace noty {
             now.time_since_epoch()) % 1000;
 
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "[%H:%M:%S");
+        
+        // Use localtime_s for Windows
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &time);
+        
+        ss << std::put_time(&timeinfo, "[%H:%M:%S");
         ss << "." << std::setfill('0') << std::setw(3) << ms.count() << "] ";
 
         switch (level) {

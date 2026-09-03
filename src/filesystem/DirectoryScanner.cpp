@@ -1,5 +1,6 @@
 #include "noty/filesystem/DirectoryScanner.h"
 #include "noty/common/Logger.h"
+#include <atomic>
 
 namespace noty {
 
@@ -20,10 +21,8 @@ namespace noty {
         m_directoryCount = 0;
 
         try {
-            // Use FileEnumerator for the actual enumeration
             FileEnumerator enumerator;
 
-            // Set up callbacks
             if (m_fileFoundCallback) {
                 enumerator.setFileCallback([this](const FileInfo& file) {
                     if (m_fileFoundCallback) {
@@ -39,7 +38,6 @@ namespace noty {
                     });
             }
 
-            // Also set progress callback
             if (m_scanCallback) {
                 enumerator.setProgressCallback([this](int64_t files, int64_t size) {
                     m_scanCallback(static_cast<int>(files), 0,
@@ -48,10 +46,8 @@ namespace noty {
                     });
             }
 
-            // Perform enumeration
             enumerator.enumerateDirectory(directory, recursive, includeHidden);
 
-            // Collect results
             if (!m_cancelled) {
                 auto stats = enumerator.getStatistics();
                 result.files = enumerator.getFiles();
@@ -67,15 +63,13 @@ namespace noty {
                 Logger::instance().info("Scan complete: " +
                     std::to_string(m_fileCount) + " files, " +
                     std::to_string(m_totalSize) + " bytes");
-            }
-            else {
+            } else {
                 result.success = false;
                 result.errorMessage = "Scan cancelled by user";
                 Logger::instance().info("Scan cancelled.");
             }
 
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             result.success = false;
             result.errorMessage = e.what();
             Logger::instance().error("Scan failed: " + std::string(e.what()));

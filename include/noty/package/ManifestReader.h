@@ -2,6 +2,7 @@
 #include "Manifest.h"
 #include <string>
 #include <optional>
+#include <nlohmann/json.hpp>
 
 namespace noty {
 
@@ -10,16 +11,9 @@ namespace noty {
         ManifestReader() = default;
         ~ManifestReader() = default;
 
-        // Read manifest from JSON string
         std::optional<Manifest> readFromString(const std::string& jsonStr) const;
-
-        // Read manifest from file
         std::optional<Manifest> readFromFile(const std::string& filename) const;
-
-        // Read only package info from JSON
         std::optional<PackageInfo> readPackageInfo(const std::string& jsonStr) const;
-
-        // Validate manifest file without fully parsing
         bool validateManifestFile(const std::string& filename) const;
 
     private:

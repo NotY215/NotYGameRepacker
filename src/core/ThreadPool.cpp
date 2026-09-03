@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / core / ThreadPool.cpp
-================================================================================
 #include "noty/core/ThreadPool.h"
 #include "noty/common/Logger.h"
 #include <algorithm>

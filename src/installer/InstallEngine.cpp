@@ -1,6 +1,3 @@
-================================================================================
-FILE: src / installer / InstallEngine.cpp
-================================================================================
 #include "noty/installer/InstallEngine.h"
 #include "noty/installer/ExtractionEngine.h"
 #include "noty/common/Logger.h"
