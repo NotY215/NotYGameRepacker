@@ -59,8 +59,6 @@ namespace noty {
 
         m_inputBuffer = std::make_unique<uint8_t[]>(m_bufferSize + 16);
         m_outputBuffer = std::make_unique<uint8_t[]>(m_bufferSize);
-
-        Logger::instance().info("Decryptor initialized with buffer size: " + std::to_string(m_bufferSize));
     }
 
     Decryptor::~Decryptor() {
@@ -160,7 +158,6 @@ namespace noty {
 
         m_initialized = true;
         m_authValid = false;
-        Logger::instance().info("Decryptor initialized with key, nonce, and auth tag");
         return true;
     }
 
@@ -213,7 +210,7 @@ namespace noty {
             }
 
             if (fileNonce != m_nonce) {
-                m_lastError = "Nonce mismatch - file may be corrupted or from different encryption";
+                m_lastError = "Nonce mismatch";
                 Logger::instance().error(m_lastError);
                 m_decrypting = false;
                 return false;
@@ -226,8 +223,7 @@ namespace noty {
             bool result = decryptStreaming(inputFileStream, outputFileStream, progress);
             m_decrypting = false;
             return result;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Decryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_decrypting = false;
@@ -295,8 +291,7 @@ namespace noty {
             bool result = decryptStreamingToCallback(inputFileStream, dataCallback, progress);
             m_decrypting = false;
             return result;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Decryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_decrypting = false;
@@ -395,11 +390,8 @@ namespace noty {
             m_authValid = true;
 
             m_decrypting = false;
-            Logger::instance().info("Buffer decryption complete: " +
-                std::to_string(inputSize) + " -> " + std::to_string(bytesWritten) + " bytes");
             return true;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Decryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_decrypting = false;
@@ -473,7 +465,7 @@ namespace noty {
                 );
 
                 if (status != 0) {
-                    m_lastError = "BCryptDecrypt failed during streaming - data may be corrupted";
+                    m_lastError = "BCryptDecrypt failed during streaming";
                     Logger::instance().error(m_lastError);
                     return false;
                 }
@@ -501,10 +493,6 @@ namespace noty {
         if (progress) {
             progress(m_encryptedSize, m_encryptedSize);
         }
-
-        Logger::instance().info("Decryption complete: " +
-            std::to_string(m_encryptedSize) + " -> " +
-            std::to_string(m_plaintextSize) + " bytes");
 
         return true;
     }

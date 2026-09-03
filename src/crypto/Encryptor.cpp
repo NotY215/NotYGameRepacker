@@ -11,12 +11,6 @@
 
 namespace noty {
 
-    static void initAuthInfo(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* info) {
-        memset(info, 0, sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO));
-        info->cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO);
-        info->dwInfoVersion = BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO_VERSION;
-    }
-
     Encryptor::Encryptor(size_t bufferSize)
         : m_algorithmHandle(nullptr)
         , m_keyHandle(nullptr)
@@ -27,6 +21,9 @@ namespace noty {
         , m_plaintextSize(0)
         , m_initialized(false)
     {
+        // BCryptOpenAlgorithmProvider expects a BCRYPT_ALG_HANDLE* (which is a pointer to a pointer)
+        // Since BCRYPT_ALG_HANDLE is already a pointer type, we pass &m_algorithmHandle
+        // m_algorithmHandle is of type BCRYPT_ALG_HANDLE, so &m_algorithmHandle is BCRYPT_ALG_HANDLE*
         NTSTATUS status = BCryptOpenAlgorithmProvider(
             &m_algorithmHandle,
             BCRYPT_AES_ALGORITHM,
@@ -58,8 +55,6 @@ namespace noty {
 
         m_inputBuffer = std::make_unique<uint8_t[]>(m_bufferSize);
         m_outputBuffer = std::make_unique<uint8_t[]>(m_bufferSize + 16);
-
-        Logger::instance().info("Encryptor initialized with buffer size: " + std::to_string(m_bufferSize));
     }
 
     Encryptor::~Encryptor() {
@@ -130,6 +125,8 @@ namespace noty {
         m_additionalData = additionalData;
         m_authTag.clear();
 
+        // BCryptImportKey: BCRYPT_KEY_HANDLE* is the 4th parameter
+        // Since BCRYPT_KEY_HANDLE is a pointer type, &m_keyHandle works
         NTSTATUS status = BCryptImportKey(
             m_algorithmHandle,
             nullptr,
@@ -149,7 +146,6 @@ namespace noty {
         }
 
         m_initialized = true;
-        Logger::instance().info("Encryptor initialized with key and nonce");
         return true;
     }
 
@@ -201,8 +197,7 @@ namespace noty {
             bool result = encryptStreaming(inputFileStream, outputFileStream, progress);
             m_encrypting = false;
             return result;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Encryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_encrypting = false;
@@ -256,8 +251,7 @@ namespace noty {
             bool result = encryptStreamingToCallback(inputFileStream, dataCallback, progress);
             m_encrypting = false;
             return result;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Encryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_encrypting = false;
@@ -294,7 +288,9 @@ namespace noty {
 
         try {
             BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-            initAuthInfo(&authInfo);
+            memset(&authInfo, 0, sizeof(authInfo));
+            authInfo.cbSize = sizeof(authInfo);
+            authInfo.dwInfoVersion = 1;
             authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
             authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
             authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
@@ -352,11 +348,8 @@ namespace noty {
             m_authTag = authTag;
 
             m_encrypting = false;
-            Logger::instance().info("Buffer encryption complete: " +
-                std::to_string(inputSize) + " -> " + std::to_string(bytesWritten) + " bytes");
             return true;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             m_lastError = "Encryption exception: " + std::string(e.what());
             Logger::instance().error(m_lastError);
             m_encrypting = false;
@@ -381,7 +374,9 @@ namespace noty {
         const size_t progressUpdateInterval = m_bufferSize * 10;
 
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-        initAuthInfo(&authInfo);
+        memset(&authInfo, 0, sizeof(authInfo));
+        authInfo.cbSize = sizeof(authInfo);
+        authInfo.dwInfoVersion = 1;
         authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
         authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
         authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
@@ -467,10 +462,6 @@ namespace noty {
             progress(m_plaintextSize, m_plaintextSize);
         }
 
-        Logger::instance().info("Encryption complete: " +
-            std::to_string(m_plaintextSize) + " -> " +
-            std::to_string(m_encryptedSize) + " bytes");
-
         return true;
     }
 
@@ -482,7 +473,9 @@ namespace noty {
         const size_t progressUpdateInterval = m_bufferSize * 10;
 
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-        initAuthInfo(&authInfo);
+        memset(&authInfo, 0, sizeof(authInfo));
+        authInfo.cbSize = sizeof(authInfo);
+        authInfo.dwInfoVersion = 1;
         authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
         authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
         authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());

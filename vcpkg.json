@@ -5,7 +5,7 @@
   "homepage": "https://github.com",
   "license": "GPL-3.0",
   "supports": "windows & x64",
-  "builtin-baseline": "7ff71c68261ecf3b60cdb8772f2e6759ee0a71b1",
+  "builtin-baseline": "e03dc9b29710050cd1018bc5674688108658d327",
   "dependencies": [
     {
       "name": "qtbase",
@@ -24,5 +24,15 @@
     "zstd",
     "nlohmann-json",
     "blake3"
+  ],
+  "overrides": [
+    {
+      "name": "zstd",
+      "version": "1.5.5"
+    },
+    {
+      "name": "nlohmann-json",
+      "version": "3.11.2"
+    }
   ]
 }
