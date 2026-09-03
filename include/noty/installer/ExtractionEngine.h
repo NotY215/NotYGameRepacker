@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/Common.h"
 #include "../package/Manifest.h"
+#include "../installer/InstallJob.h"
 #include <string>
 #include <vector>
 #include <functional>

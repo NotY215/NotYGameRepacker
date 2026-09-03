@@ -395,7 +395,7 @@ namespace noty {
         chunk.id = ctx.currentChunkId++;
         chunk.filename = ctx.config.gameName + "." +
             std::to_string(chunk.id).insert(0, 3 - std::to_string(chunk.id).length(), '0') +
-            Constants::PACKAGE_EXTENSION;
+            noty::Constants::PACKAGE_EXTENSION;
         chunk.uncompressedSize = ctx.currentChunkData.size();
         chunk.compressedSize = chunk.uncompressedSize; // Already compressed
         chunk.fileCount = 0; // Will be set when writing
@@ -511,7 +511,7 @@ namespace noty {
         info.creationDate = std::chrono::system_clock::now();
 
         // Write manifest to file
-        std::string manifestPath = (fs::path(ctx.outputDirectory) / Constants::MANIFEST_FILENAME).string();
+        std::string manifestPath = (fs::path(ctx.outputDirectory) / noty::Constants::MANIFEST_FILENAME).string();
         if (!writer.writeToFilePretty(*ctx.manifest, manifestPath)) {
             m_lastError = "Failed to write manifest";
             Logger::instance().error(m_lastError);
@@ -534,7 +534,7 @@ namespace noty {
         }
 
         try {
-            std::string coverPath = (fs::path(ctx.outputDirectory) / Constants::COVER_FILENAME).string();
+            std::string coverPath = (fs::path(ctx.outputDirectory) / noty::Constants::COVER_FILENAME).string();
             fs::copy_file(ctx.config.coverImagePath, coverPath, fs::copy_options::overwrite_existing);
             Logger::instance().info("Cover image copied to: " + coverPath);
             return true;

@@ -214,7 +214,6 @@ namespace noty {
     bool Encryptor::encryptToCallback(const std::string& inputFile,
         DataCallback dataCallback,
         ProgressCallback progress) {
-        // Similar to encryptFile but with callback
         if (!m_initialized || !m_algorithmHandle || !m_keyHandle) {
             m_lastError = "Encryptor not properly initialized";
             Logger::instance().error(m_lastError);
@@ -302,7 +301,6 @@ namespace noty {
             authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
             authInfo.cbAuthData = static_cast<ULONG>(m_additionalData.size());
 
-            // First pass: get encrypted size
             ULONG encryptedSize = 0;
             NTSTATUS status = BCryptEncrypt(
                 m_keyHandle,
@@ -394,8 +392,6 @@ namespace noty {
         authInfo.pbTag = authTag.data();
         authInfo.cbTag = 16;
 
-        bool firstBlock = true;
-
         while (!inputStream.eof() && !m_cancelled) {
             inputStream.read(reinterpret_cast<char*>(m_inputBuffer.get()), m_bufferSize);
             size_t bytesRead = static_cast<size_t>(inputStream.gcount());
@@ -404,7 +400,6 @@ namespace noty {
                 break;
             }
 
-            // Get encrypted size
             ULONG encryptedSize = 0;
             NTSTATUS status = BCryptEncrypt(
                 m_keyHandle,
@@ -465,7 +460,6 @@ namespace noty {
             return false;
         }
 
-        // Write authentication tag at the end
         outputStream.write(reinterpret_cast<const char*>(authTag.data()), authTag.size());
         m_authTag = authTag;
         m_encryptedSize += authTag.size();

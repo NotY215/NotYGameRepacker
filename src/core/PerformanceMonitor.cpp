@@ -239,7 +239,7 @@ namespace noty {
         m_estimatedTimeRemaining = etaMs;
 
         // Check if ETA is stable (based on sample count)
-        m_etaStable = m_throughputSamples.size() >= 5;
+        m_etaStable.store(m_throughputSamples.size() >= 5, std::memory_order_release);
     }
 
     void PerformanceMonitor::updateSystemMemory() {

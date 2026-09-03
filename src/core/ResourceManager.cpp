@@ -122,11 +122,11 @@ namespace noty {
         }
 
         // Cap buffer sizes to prevent excessive memory usage
-        const size_t MAX_BUFFER = 16 * MB;
-        m_config.compressionBufferSize = std::min(m_config.compressionBufferSize, MAX_BUFFER);
-        m_config.decompressionBufferSize = std::min(m_config.decompressionBufferSize, MAX_BUFFER);
-        m_config.encryptionBufferSize = std::min(m_config.encryptionBufferSize, MAX_BUFFER);
-        m_config.fileBufferSize = std::min(m_config.fileBufferSize, MAX_BUFFER);
+        const size_t MAX_BUFFER_SIZE = 16 * MB;
+        m_config.compressionBufferSize = std::min(m_config.compressionBufferSize, MAX_BUFFER_SIZE);
+        m_config.decompressionBufferSize = std::min(m_config.decompressionBufferSize, MAX_BUFFER_SIZE);
+        m_config.encryptionBufferSize = std::min(m_config.encryptionBufferSize, MAX_BUFFER_SIZE);
+        m_config.fileBufferSize = std::min(m_config.fileBufferSize, MAX_BUFFER_SIZE);
         m_config.chunkBufferSize = std::min(m_config.chunkBufferSize, 100 * MB);
     }
 

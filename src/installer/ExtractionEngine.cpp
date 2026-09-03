@@ -239,11 +239,11 @@ namespace noty {
         fs::path path(ctx.packagePath);
 
         if (fs::is_directory(path)) {
-            manifestPath = (path / Constants::MANIFEST_FILENAME).string();
+            manifestPath = (path / noty::Constants::MANIFEST_FILENAME).string();
         }
         else if (fs::is_regular_file(path)) {
             // Try to find manifest in the same directory
-            manifestPath = (path.parent_path() / Constants::MANIFEST_FILENAME).string();
+            manifestPath = (path.parent_path() / noty::Constants::MANIFEST_FILENAME).string();
         }
         else {
             m_lastError = "Invalid package path: " + ctx.packagePath;
