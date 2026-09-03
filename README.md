@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/NotY215/NotYGameRepacker)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-brightgreen.svg)](https://www.microsoft.com/windows)
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-red.svg)](LICENSE)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://isocpp.org/)
 
 **Professional Windows Game Packaging/Repacking System**
@@ -48,8 +48,7 @@ NotY Game Repacker is a comprehensive, professional-grade game packaging system 
 | IDE | Visual Studio 2026 (Community or higher) |
 | Compiler | MSVC v19.51+ (Visual Studio 2026 toolchain) |
 | CMake | 3.20 or higher |
-| vcpkg | Latest version |
-| Git | For vcpkg bootstrap |
+| vcpkg | Built-in with Visual Studio 2026 |
 
 ### Runtime
 | Component | Requirement |
@@ -63,14 +62,14 @@ NotY Game Repacker is a comprehensive, professional-grade game packaging system 
 
 ## 📦 Dependencies
 
-All dependencies are managed through **vcpkg** and installed globally:
+All dependencies are managed through **Visual Studio's built-in vcpkg**:
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| Qt6 (qtbase) | 6.7.2 | GUI framework |
-| Zstandard (zstd) | Latest | Compression |
-| nlohmann-json | Latest | JSON parsing |
-| BLAKE3 (blake3) | Latest | Cryptographic hashing |
+| Library | Purpose |
+|---------|---------|
+| Qt6 (qtbase) | GUI framework |
+| Zstandard (zstd) | Compression |
+| nlohmann-json | JSON parsing |
+| BLAKE3 (blake3) | Cryptographic hashing |
 
 ### Qt Features
 - Core, Widgets, Gui
@@ -80,103 +79,79 @@ All dependencies are managed through **vcpkg** and installed globally:
 
 ---
 
-## 🔧 Quick Setup
+## 🔧 Setup
 
-### 1. Install vcpkg
+### 1. Configure vcpkg.json
 
-```cmd
-cd /d F:\
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-.\bootstrap-vcpkg.bat
-```
-
-### 2. Install Dependencies
-
-Create `F:\vcpkg\vcpkg.json` with:
+Create `vcpkg.json` in your project root with the following content:
 
 ```json
 {
-  "name": "global-dependencies",
-  "version": "1.0",
-  "builtin-baseline": "30ef65cad98f08e7197c9a1656fbd871bcb72f2d",
+  "name": "noty-game-repacker",
+  "version": "1.0.0",
+  "description": "Professional Windows game packaging/repacking system",
+  "homepage": "https://github.com",
+  "license": "GPL-3.0 license",
+  "supports": "windows & x64",
+  "builtin-baseline": "set baseline to that repo's HEAD",
   "dependencies": [
     {
       "name": "qtbase",
       "default-features": false,
       "features": [
-        "gui", "widgets", "network",
-        "concurrent", "opengl",
-        "freetype", "harfbuzz", "png"
+        "gui",
+        "widgets",
+        "network",
+        "concurrent",
+        "opengl",
+        "freetype",
+        "harfbuzz",
+        "png"
       ]
     },
     "zstd",
     "nlohmann-json",
     "blake3"
-  ],
-  "overrides": [
-    {
-      "name": "qtbase",
-      "version": "6.7.2"
-    }
   ]
 }
 ```
 
-Then install:
+### 2. Integrate vcpkg with Visual Studio
+
+Run the following command in Developer Command Prompt for Visual Studio:
 
 ```cmd
-cd /d F:\vcpkg
-vcpkg install --triplet x64-windows
+vcpkg integrate install
 ```
 
-### 3. Set Environment Variables
+### 3. Install Dependencies
 
 ```cmd
-set VCPKG_ROOT=F:\vcpkg
+"C:\Program Files\Microsoft Visual Studio\18\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows
 ```
-
-Or run the setup script:
-```cmd
-tools\setup_env.bat
-```
-
-For detailed vcpkg setup, see [docs/vcpkg.md](docs/vcpkg.md).
 
 ---
 
 ## 🏗️ Building
 
-### Quick Build
+### Build in Visual Studio
 
-```cmd
-tools\build.bat
-```
+1. Open the project folder in Visual Studio
+2. CMake will automatically detect the presets
+3. Select the `default` preset
+4. Build the solution
 
-### Manual Build
+### Build from Command Line
 
 ```cmd
 cmake --preset default
-cmake --build build --config Release --parallel
+cmake --build build --config Release
 ```
 
 ### Build Output
 
 - **Repacker**: `build/apps/Repacker/Release/NotYRepacker.exe`
 - **Setup**: `build/apps/Setup/Release/NotYSetup.exe`
-
-For detailed build instructions, see [docs/BUILD.md](docs/BUILD.md).
-
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [BUILD.md](docs/BUILD.md) | Complete build instructions |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment and packaging guide |
-| [USER_GUIDE.md](docs/USER_GUIDE.md) | End-user documentation |
-| [vcpkg.md](docs/vcpkg.md) | vcpkg setup guide |
 
 ---
 
@@ -225,8 +200,9 @@ NotYGameRepacker/
 │   ├── repacker/           # Repacker UI
 │   └── installer/          # Installer UI
 ├── cmake/                  # CMake modules
-├── tools/                  # Build tools
-└── docs/                   # Documentation
+├── CMakeLists.txt          # Main CMake file
+├── CMakePresets.json       # CMake presets
+└── vcpkg.json              # vcpkg dependencies
 ```
 
 ---
@@ -267,38 +243,15 @@ NotYGameRepacker/
 
 ---
 
-## 🛠️ Development
-
-### Tools
-
-| Tool | Purpose |
-|------|---------|
-| `tools/setup_env.bat` | Environment setup |
-| `tools/build.bat` | Build automation |
-| `tools/package.bat` | Package creation |
-| `tools/deploy.bat` | Qt deployment |
-
-### Coding Standards
-- C++20 standard
-- RAII principles
-- Modern C++ idioms
-- Comprehensive error handling
-- Clear logging
-
----
-
 ## 📄 License
 
-This project is proprietary software. All rights reserved.
+This project is licensed under the **GPL-3.0 License**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 👥 Authors
 
 **NotY215** - Project Lead
-
-- Website: https://noty215.com
-- Email: support@noty215.com
 
 ---
 
@@ -317,10 +270,9 @@ This project is proprietary software. All rights reserved.
 ### Resources
 - Documentation: `/docs` directory
 - Issues: Contact support via email
-- Website: https://noty215.com
 
 ### Feedback
-We welcome feedback and suggestions for improvement. Please reach out via email.
+We welcome feedback and suggestions for improvement.
 
 ---
 
@@ -353,9 +305,8 @@ We welcome feedback and suggestions for improvement. Please reach out via email.
 
 ### Important
 - The project is designed for Windows 10/11 x64 only
-- All dependencies are managed via vcpkg
-- No project-local vcpkg.json is required
-- Qt 6.7.2 is used, not 6.11.1
+- All dependencies are managed via Visual Studio's built-in vcpkg
+- Qt 6.x is used via vcpkg manifest mode
 
 ### Credits
 - **NotY215** - All rights reserved
@@ -365,44 +316,4 @@ We welcome feedback and suggestions for improvement. Please reach out via email.
 
 ---
 
-## 📖 Quick Reference
-
-### Build Commands
-
-```cmd
-# Setup environment
-call tools\setup_env.bat
-
-# Build
-tools\build.bat
-
-# Package
-tools\package.bat
-
-# Deploy Qt
-tools\deploy.bat
-```
-
-### Environment Variables
-
-```cmd
-VCPKG_ROOT=F:\vcpkg
-```
-
-### Output Locations
-
-```cmd
-# Repacker
-build/apps/Repacker/Release/NotYRepacker.exe
-
-# Setup
-build/apps/Setup/Release/NotYSetup.exe
-
-# Distribution
-dist/
-```
-
----
-
 **© 2026 NotY215. All Rights Reserved.**
-
