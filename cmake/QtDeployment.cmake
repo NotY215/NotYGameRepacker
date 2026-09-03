@@ -1,3 +1,4 @@
+# Function to deploy Qt dependencies for a target
 function(deploy_qt TARGET_NAME)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
         find_program(WINDEPLOYQT_EXECUTABLE windeployqt6)
@@ -20,6 +21,7 @@ function(deploy_qt TARGET_NAME)
             message(STATUS "Qt deployment configured for ${TARGET_NAME}")
         else()
             message(WARNING "windeployqt not found; Qt DLLs will not be automatically deployed.")
+            message(WARNING "Please ensure Qt6 is in your PATH or set Qt6_DIR correctly.")
         endif()
     endif()
 endfunction()

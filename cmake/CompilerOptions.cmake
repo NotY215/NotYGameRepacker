@@ -10,9 +10,6 @@ if(MSVC)
         # Release optimizations
         add_compile_options(/O2 /Oi /GL)
         add_link_options(/LTCG /OPT:REF /OPT:ICF)
-        
-        # Enable SSE2 optimizations (AVX2 optional, remove if compatibility needed)
-        # add_compile_options(/arch:AVX2)
     elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
         # Debug settings
         add_compile_options(/Od /Zi)

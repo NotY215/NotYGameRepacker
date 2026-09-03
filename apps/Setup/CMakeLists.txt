@@ -46,13 +46,4 @@ endif()
 include(QtDeployment)
 deploy_qt(NotYSetup)
 
-# Package the application
-package_application(NotYSetup)
-
-# Create a custom target for the full setup package
-add_custom_target(package_setup
-    DEPENDS NotYSetup package_NotYSetup
-    COMMENT "Packaging NotYSetup..."
-)
-
 message(STATUS "NotYSetup configured")

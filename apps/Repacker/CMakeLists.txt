@@ -46,13 +46,4 @@ endif()
 include(QtDeployment)
 deploy_qt(NotYRepacker)
 
-# Package the application
-package_application(NotYRepacker)
-
-# Create a custom target for the full repacker package
-add_custom_target(package_repacker
-    DEPENDS NotYRepacker package_NotYRepacker
-    COMMENT "Packaging NotYRepacker..."
-)
-
 message(STATUS "NotYRepacker configured")
