@@ -11,7 +11,6 @@
 
 namespace noty {
 
-    // Helper function to initialize authenticated cipher mode info
     static void initAuthInfo(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* info) {
         memset(info, 0, sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO));
         info->cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO);

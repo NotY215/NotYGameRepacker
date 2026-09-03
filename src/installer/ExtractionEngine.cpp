@@ -214,13 +214,13 @@ namespace noty {
             // Check if it's a directory containing chunks
             if (fs::is_directory(packageDir)) {
                 for (const auto& entry : fs::directory_iterator(packageDir)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".noty") {
+                    if (entry.is_regular_file() && entry.path().extension() == noty::Constants::PACKAGE_EXTENSION) {
                         totalSize += fs::file_size(entry.path());
                     }
                 }
             }
             else if (fs::is_regular_file(packageDir) &&
-                packageDir.extension() == ".noty") {
+                packageDir.extension() == noty::Constants::PACKAGE_EXTENSION) {
                 totalSize = fs::file_size(packageDir);
             }
         }
@@ -274,4 +274,230 @@ namespace noty {
             " files, " + std::to_string(ctx.totalSize) + " bytes");
 
         // Initialize decryptor if encryption is enabled
-        if (ctx.config.enableEncryption)
+        if (ctx.config.enableEncryption) {
+            if (ctx.config.encryptionKey.empty() || ctx.config.encryptionNonce.empty()) {
+                m_lastError = "Encryption enabled but key or nonce missing";
+                Logger::instance().error(m_lastError);
+                return false;
+            }
+
+            // We need to get the auth tag from somewhere - it should be in the manifest or chunk headers
+            // For now, we'll use a placeholder - in production, this would come from the package
+            std::vector<uint8_t> dummyAuthTag(16, 0);
+
+            if (!m_decryptor->initialize(
+                ctx.config.encryptionKey,
+                ctx.config.encryptionNonce,
+                dummyAuthTag,
+                {})) {
+                m_lastError = "Failed to initialize decryptor: " + m_decryptor->getLastError();
+                Logger::instance().error(m_lastError);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool ExtractionEngine::prepareInstallDirectory(ExtractionContext& ctx) {
+        try {
+            fs::path installPath(ctx.installDirectory);
+
+            // Check if directory exists and is writable
+            if (fs::exists(installPath)) {
+                if (!fs::is_directory(installPath)) {
+                    m_lastError = "Install path exists but is not a directory: " + ctx.installDirectory;
+                    Logger::instance().error(m_lastError);
+                    return false;
+                }
+
+                // Check write permissions by trying to create a test file
+                std::string testFile = ctx.installDirectory + "/.noty_test";
+                std::ofstream test(testFile);
+                if (!test.is_open()) {
+                    m_lastError = "Install directory is not writable: " + ctx.installDirectory;
+                    Logger::instance().error(m_lastError);
+                    return false;
+                }
+                test.close();
+                fs::remove(testFile);
+            }
+            else {
+                // Create directory
+                if (!fs::create_directories(installPath)) {
+                    m_lastError = "Failed to create install directory: " + ctx.installDirectory;
+                    Logger::instance().error(m_lastError);
+                    return false;
+                }
+            }
+
+            Logger::instance().info("Install directory prepared: " + ctx.installDirectory);
+            return true;
+        }
+        catch (const std::exception& e) {
+            m_lastError = "Failed to prepare install directory: " + std::string(e.what());
+            Logger::instance().error(m_lastError);
+            return false;
+        }
+    }
+
+    bool ExtractionEngine::extractChunks(ExtractionContext& ctx) {
+        const auto& chunks = ctx.manifest->getChunks();
+        size_t totalChunks = chunks.size();
+        size_t processedChunks = 0;
+
+        for (const auto& chunkInfo : chunks) {
+            if (m_cancelled) {
+                m_lastError = "Extraction cancelled by user";
+                Logger::instance().info(m_lastError);
+                return false;
+            }
+
+            // Build chunk file path
+            fs::path chunkPath(ctx.packagePath);
+            if (fs::is_directory(chunkPath)) {
+                chunkPath /= chunkInfo.filename;
+            }
+            else if (fs::is_regular_file(chunkPath)) {
+                chunkPath = chunkPath.parent_path() / chunkInfo.filename;
+            }
+            else {
+                m_lastError = "Invalid chunk path: " + ctx.packagePath;
+                Logger::instance().error(m_lastError);
+                return false;
+            }
+
+            if (!fs::exists(chunkPath)) {
+                m_lastError = "Chunk file not found: " + chunkPath.string();
+                Logger::instance().error(m_lastError);
+                return false;
+            }
+
+            // Read chunk data
+            std::ifstream chunkFile(chunkPath.string(), std::ios::binary);
+            if (!chunkFile.is_open()) {
+                m_lastError = "Failed to open chunk file: " + chunkPath.string();
+                Logger::instance().error(m_lastError);
+                return false;
+            }
+
+            chunkFile.seekg(0, std::ios::end);
+            size_t chunkSize = static_cast<size_t>(chunkFile.tellg());
+            chunkFile.seekg(0, std::ios::beg);
+
+            // Read the entire chunk (with header) - in production, this should be streaming
+            std::vector<uint8_t> chunkData(chunkSize);
+            chunkFile.read(reinterpret_cast<char*>(chunkData.data()), chunkSize);
+            chunkFile.close();
+
+            // Process the chunk (extract files from it)
+            // In a real implementation, you'd parse the chunk header and extract files
+            // For now, we'll just decompress and decrypt the payload
+
+            // Find files in this chunk
+            const auto& files = ctx.manifest->getFiles();
+            for (const auto& entry : files) {
+                if (entry.chunkId == chunkInfo.id) {
+                    if (m_cancelled) {
+                        return false;
+                    }
+
+                    // Extract file from chunk
+                    if (!extractFileFromChunk(ctx, entry, chunkData)) {
+                        return false;
+                    }
+                }
+            }
+
+            processedChunks++;
+            int percent = 15 + (processedChunks * 80 / totalChunks);
+            updateProgress(ctx, percent, "Extracting chunk " +
+                std::to_string(processedChunks) + "/" + std::to_string(totalChunks));
+        }
+
+        return true;
+    }
+
+    bool ExtractionEngine::extractFileFromChunk(ExtractionContext& ctx,
+        const FileEntry& entry,
+        const std::vector<uint8_t>& chunkData) {
+        // In a real implementation, this would parse the chunk header,
+        // locate the file data at entry.offsetInChunk, and decompress/decrypt it
+
+        // For now, we'll simulate extraction by decompressing and decrypting the entire chunk
+        std::vector<uint8_t> decompressedData;
+        std::vector<uint8_t> decryptedData;
+
+        // Decompress
+        if (!m_decompressor->decompressBuffer(
+            chunkData.data(),
+            chunkData.size(),
+            decompressedData)) {
+            m_lastError = "Decompression failed: " + m_decompressor->getLastError();
+            Logger::instance().error(m_lastError);
+            return false;
+        }
+
+        // Decrypt if enabled
+        if (ctx.config.enableEncryption) {
+            if (!m_decryptor->isAuthenticationValid()) {
+                // Try to decrypt the data
+                // In production, you'd have proper auth tag handling
+            }
+        }
+
+        // Build output path
+        fs::path outputPath = fs::path(ctx.installDirectory) / entry.path;
+        fs::create_directories(outputPath.parent_path());
+
+        // Write file
+        std::ofstream outputFile(outputPath.string(), std::ios::binary);
+        if (!outputFile.is_open()) {
+            m_lastError = "Failed to create file: " + entry.path;
+            Logger::instance().error(m_lastError);
+            return false;
+        }
+
+        // For now, write the decompressed data (assuming it's the file)
+        // In production, you'd extract the specific file from the chunk
+        outputFile.write(
+            reinterpret_cast<const char*>(decompressedData.data()),
+            std::min(decompressedData.size(), static_cast<size_t>(entry.size)));
+        outputFile.close();
+
+        ctx.extractedFileCount++;
+        ctx.extractedSize += entry.size;
+
+        updateFileProgress(ctx, entry.path,
+            static_cast<int>(ctx.extractedFileCount * 100 / ctx.fileCount));
+
+        return true;
+    }
+
+    bool ExtractionEngine::verifyExtractedFiles(ExtractionContext& ctx) {
+        return verifyExtraction(*ctx.manifest, ctx.installDirectory);
+    }
+
+    bool ExtractionEngine::decompressAndDecryptFile(const std::vector<uint8_t>& encryptedData,
+        const FileEntry& entry,
+        std::vector<uint8_t>& outputData,
+        ExtractionContext& ctx) {
+        // In production, this would handle proper decompression and decryption
+        // For now, we'll just copy the data
+        outputData = encryptedData;
+        return true;
+    }
+
+    void ExtractionEngine::updateProgress(ExtractionContext& ctx, int percent, const std::string& status) {
+        if (ctx.progress) {
+            ctx.progress(std::min(percent, 100), status);
+        }
+    }
+
+    void ExtractionEngine::updateFileProgress(ExtractionContext& ctx, const std::string& filename, int percent) {
+        if (ctx.fileProgress) {
+            ctx.fileProgress(filename, std::min(percent, 100));
+        }
+    }
+
+} // namespace noty
