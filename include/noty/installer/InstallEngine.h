@@ -97,7 +97,7 @@ namespace noty {
         std::unique_ptr<ExtractionEngine> m_extractionEngine;
 
         std::queue<InstallJob> m_jobQueue;
-        std::mutex m_queueMutex;
+        mutable std::mutex m_queueMutex;
         std::condition_variable m_queueCondition;
 
         std::unique_ptr<InstallJob> m_currentJob;

@@ -15,12 +15,11 @@ namespace noty {
         , m_processingComplete(true)
     {
         if (m_threadPoolSize == 0) {
-            m_threadPoolSize = 4; // Fallback
+            m_threadPoolSize = 4;
         }
 
         m_extractionEngine = std::make_unique<ExtractionEngine>();
 
-        // Start worker threads
         for (size_t i = 0; i < m_threadPoolSize; ++i) {
             m_workerThreads.emplace_back(&InstallEngine::workerThread, this);
         }
@@ -40,8 +39,10 @@ namespace noty {
             return false;
         }
 
-        std::lock_guard<std::mutex> lock(m_queueMutex);
-        m_jobQueue.push(std::move(job));
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            m_jobQueue.push(std::move(job));
+        }
         m_queueCondition.notify_one();
 
         Logger::instance().info("Install job queued: " + job.getConfiguration().gameName);
@@ -57,9 +58,11 @@ namespace noty {
     }
 
     void InstallEngine::cancelAllJobs() {
-        std::lock_guard<std::mutex> lock(m_queueMutex);
-        while (!m_jobQueue.empty()) {
-            m_jobQueue.pop();
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            while (!m_jobQueue.empty()) {
+                m_jobQueue.pop();
+            }
         }
         cancelCurrentJob();
         Logger::instance().info("All install jobs cancelled");
@@ -130,7 +133,6 @@ namespace noty {
                 m_jobQueue.pop();
             }
 
-            // Process the job
             m_activeJobs++;
             m_processingComplete = false;
 
@@ -160,7 +162,6 @@ namespace noty {
         job.setStartTime(std::chrono::steady_clock::now());
         job.notifyProgress(0, "Validating package...");
 
-        // Update progress callback to forward to job
         auto progressCallback = [&job](int percent, const std::string& status) {
             job.notifyProgress(percent, status);
             };
@@ -173,7 +174,6 @@ namespace noty {
             job.setState(InstallJob::State::Preparing);
             job.notifyProgress(5, "Preparing installation...");
 
-            // Extract the package
             bool result = m_extractionEngine->extractPackage(
                 job.getConfiguration().packagePath,
                 job.getConfiguration().installDirectory,
@@ -198,11 +198,9 @@ namespace noty {
                 return false;
             }
 
-            // Set job results
             job.setInstalledSize(m_extractionEngine->getExtractedSize());
             job.setExtractedFileCount(m_extractionEngine->getExtractedFileCount());
 
-            // Verify extraction if requested
             if (job.getConfiguration().verifyFiles) {
                 job.setState(InstallJob::State::Verifying);
                 job.notifyProgress(95, "Verifying installation...");

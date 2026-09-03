@@ -16,12 +16,11 @@ namespace noty {
         , m_processingComplete(true)
     {
         if (m_threadPoolSize == 0) {
-            m_threadPoolSize = 4; // Fallback
+            m_threadPoolSize = 4;
         }
 
         m_packageBuilder = std::make_unique<PackageBuilder>();
 
-        // Start worker threads
         for (size_t i = 0; i < m_threadPoolSize; ++i) {
             m_workerThreads.emplace_back(&RepackEngine::workerThread, this);
         }
@@ -41,8 +40,10 @@ namespace noty {
             return false;
         }
 
-        std::lock_guard<std::mutex> lock(m_queueMutex);
-        m_jobQueue.push(std::move(job));
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            m_jobQueue.push(std::move(job));
+        }
         m_queueCondition.notify_one();
 
         Logger::instance().info("Job queued: " + job.getConfiguration().gameName);
@@ -58,9 +59,11 @@ namespace noty {
     }
 
     void RepackEngine::cancelAllJobs() {
-        std::lock_guard<std::mutex> lock(m_queueMutex);
-        while (!m_jobQueue.empty()) {
-            m_jobQueue.pop();
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            while (!m_jobQueue.empty()) {
+                m_jobQueue.pop();
+            }
         }
         cancelCurrentJob();
         Logger::instance().info("All jobs cancelled");
@@ -131,7 +134,6 @@ namespace noty {
                 m_jobQueue.pop();
             }
 
-            // Process the job
             m_activeJobs++;
             m_processingComplete = false;
 
@@ -161,7 +163,6 @@ namespace noty {
         job.setStartTime(std::chrono::steady_clock::now());
         job.notifyProgress(0, "Preparing to repack...");
 
-        // Update progress callback to forward to job
         auto progressCallback = [&job](int percent, const std::string& status) {
             job.notifyProgress(percent, status);
             };
@@ -174,7 +175,6 @@ namespace noty {
             job.setState(RepackJob::State::Scanning);
             job.notifyProgress(5, "Scanning source directory...");
 
-            // Build the package
             bool result = m_packageBuilder->buildPackage(
                 job.getConfiguration().sourceDirectory,
                 job.getConfiguration().outputDirectory,
@@ -199,11 +199,9 @@ namespace noty {
                 return false;
             }
 
-            // Set job results
             job.setOriginalSize(m_packageBuilder->getTotalProcessedSize());
             job.setCompressedSize(job.getManifest().calculateTotalCompressedSize());
 
-            // Add output files
             auto chunkPaths = m_packageBuilder->getChunkPaths();
             for (const auto& path : chunkPaths) {
                 job.addOutputFile(path);
@@ -233,7 +231,6 @@ namespace noty {
     }
 
     void RepackEngine::cleanup() {
-        // Clean up resources
         m_packageBuilder.reset();
     }
 

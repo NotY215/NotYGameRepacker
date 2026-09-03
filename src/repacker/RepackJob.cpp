@@ -11,7 +11,6 @@ namespace noty {
         , m_originalSize(0)
         , m_compressedSize(0)
     {
-        // Generate a default package ID
         m_config.packageId = "NOTY-" + std::to_string(
             std::chrono::system_clock::now().time_since_epoch().count());
     }
@@ -137,7 +136,7 @@ namespace noty {
             return false;
         }
 
-        if (m_config.maxChunkSize < 1024 * 1024) { // 1MB minimum
+        if (m_config.maxChunkSize < 1024 * 1024) {
             m_validationError = "Maximum chunk size must be at least 1MB";
             return false;
         }

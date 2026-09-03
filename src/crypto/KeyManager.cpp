@@ -36,7 +36,6 @@ namespace noty {
             return false;
         }
 
-        // Use BCrypt for random generation (Windows 7+)
         BCRYPT_ALG_HANDLE handle = nullptr;
         NTSTATUS status = BCryptOpenAlgorithmProvider(&handle, BCRYPT_RNG_ALGORITHM, nullptr, 0);
 
@@ -49,7 +48,6 @@ namespace noty {
             }
         }
 
-        // Fallback to CryptGenRandom (older Windows)
         HCRYPTPROV prov = 0;
         if (CryptAcquireContext(&prov, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
             BOOL result = CryptGenRandom(prov, static_cast<DWORD>(size), buffer);
@@ -111,19 +109,17 @@ namespace noty {
             return {};
         }
 
-        // Use BCrypt PBKDF2 if available (Windows 8+)
         BCRYPT_ALG_HANDLE handle = nullptr;
         NTSTATUS status = BCryptOpenAlgorithmProvider(&handle, BCRYPT_SHA256_ALGORITHM, nullptr, 0);
 
         if (status == 0) {
-            // BCrypt PBKDF2 is available
             std::vector<uint8_t> passphraseBytes(passphrase.begin(), passphrase.end());
 
             status = BCryptDeriveKeyPBKDF2(
                 handle,
                 passphraseBytes.data(),
                 static_cast<ULONG>(passphraseBytes.size()),
-                salt.data(),
+                const_cast<PUCHAR>(salt.data()),
                 static_cast<ULONG>(salt.size()),
                 iterations,
                 derivedKey.data(),
@@ -134,7 +130,6 @@ namespace noty {
             BCryptCloseAlgorithmProvider(handle, 0);
 
             if (status == 0) {
-                // Secure zero the passphrase copy
                 secureZero(passphraseBytes);
                 Logger::instance().info("Key derived using BCrypt PBKDF2 with " +
                     std::to_string(iterations) + " iterations");
@@ -142,30 +137,22 @@ namespace noty {
             }
         }
 
-        // Fallback: Use a simple but secure derivation
-        // This is a simplified version - in production, use a proper PBKDF2 implementation
+        // Fallback: Simple derivation for older Windows
         Logger::instance().warning("BCrypt PBKDF2 unavailable, using fallback derivation");
 
-        // Simple but not ideal - in production, you'd implement PBKDF2 manually
-        // or use OpenSSL's implementation
         std::vector<uint8_t> combined;
         combined.reserve(passphrase.size() + salt.size());
         combined.insert(combined.end(), passphrase.begin(), passphrase.end());
         combined.insert(combined.end(), salt.begin(), salt.end());
 
-        // Use a simple hash-based approach
-        // This is NOT cryptographically secure for production use
-        // In a real project, you would use a proper PBKDF2 implementation
         for (size_t i = 0; i < std::min(combined.size(), derivedKey.size()); ++i) {
             derivedKey[i] = combined[i] ^ static_cast<uint8_t>(i);
         }
 
-        // Pad remaining bytes
         for (size_t i = combined.size(); i < derivedKey.size(); ++i) {
             derivedKey[i] = static_cast<uint8_t>(i ^ (iterations & 0xFF));
         }
 
-        // Multiple iterations
         for (uint32_t iter = 0; iter < std::min(iterations, 10000u); ++iter) {
             for (size_t i = 0; i < derivedKey.size(); ++i) {
                 derivedKey[i] = static_cast<uint8_t>((derivedKey[i] * 3 + 1) & 0xFF);

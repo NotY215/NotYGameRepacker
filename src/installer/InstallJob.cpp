@@ -21,7 +21,6 @@ namespace noty {
         , m_installedSize(0)
         , m_extractedFileCount(0)
     {
-        // Initialize selected components from config
         m_selectedComponents = config.selectedComponents;
     }
 

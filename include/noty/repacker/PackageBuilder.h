@@ -2,6 +2,8 @@
 #include "../common/Common.h"
 #include "../package/Manifest.h"
 #include "../hashing/Hasher.h"
+#include "../filesystem/FileInfo.h"
+#include "../repacker/RepackJob.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -141,7 +143,7 @@ namespace noty {
         std::string m_setupPath;
         std::vector<std::string> m_chunkPaths;
 
-        // Buffer for file operations
+        // Buffers for file operations
         std::vector<uint8_t> m_fileBuffer;
         std::vector<uint8_t> m_compressedBuffer;
         std::vector<uint8_t> m_encryptedBuffer;

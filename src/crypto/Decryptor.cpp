@@ -5,10 +5,17 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <vector>
 
 #pragma comment(lib, "bcrypt.lib")
 
 namespace noty {
+
+    static void initAuthInfo(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO* info) {
+        memset(info, 0, sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO));
+        info->cbSize = sizeof(BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO);
+        info->dwInfoVersion = BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO_VERSION;
+    }
 
     Decryptor::Decryptor(size_t bufferSize)
         : m_algorithmHandle(nullptr)
@@ -196,7 +203,6 @@ namespace noty {
                 return false;
             }
 
-            // Read nonce from file (first 12 bytes)
             std::vector<uint8_t> fileNonce(12);
             inputFileStream.read(reinterpret_cast<char*>(fileNonce.data()), 12);
             if (inputFileStream.gcount() != 12) {
@@ -206,7 +212,6 @@ namespace noty {
                 return false;
             }
 
-            // Verify nonce matches
             if (fileNonce != m_nonce) {
                 m_lastError = "Nonce mismatch - file may be corrupted or from different encryption";
                 Logger::instance().error(m_lastError);
@@ -215,7 +220,7 @@ namespace noty {
             }
 
             inputFileStream.seekg(0, std::ios::end);
-            m_encryptedSize = static_cast<uint64_t>(inputFileStream.tellg()) - 12; // Subtract nonce size
+            m_encryptedSize = static_cast<uint64_t>(inputFileStream.tellg()) - 12;
             inputFileStream.seekg(12, std::ios::beg);
 
             bool result = decryptStreaming(inputFileStream, outputFileStream, progress);
@@ -334,16 +339,13 @@ namespace noty {
 
         try {
             BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-            BCryptInitAuthenticatedCipherModeInfo(&authInfo);
+            initAuthInfo(&authInfo);
             authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
             authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
             authInfo.pbTag = const_cast<PUCHAR>(authTag.data());
             authInfo.cbTag = static_cast<ULONG>(authTag.size());
             authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
             authInfo.cbAuthData = static_cast<ULONG>(m_additionalData.size());
-
-            // Determine output size (same as input minus tag size, but we'll let BCrypt tell us)
-            outputData.resize(inputSize);
 
             ULONG decryptedSize = 0;
             NTSTATUS status = BCryptDecrypt(
@@ -353,9 +355,31 @@ namespace noty {
                 &authInfo,
                 nullptr,
                 0,
+                nullptr,
+                0,
+                &decryptedSize,
+                0
+            );
+
+            if (status != 0) {
+                m_lastError = "BCryptDecrypt size query failed";
+                Logger::instance().error(m_lastError);
+                m_decrypting = false;
+                return false;
+            }
+
+            outputData.resize(decryptedSize);
+            ULONG bytesWritten = 0;
+            status = BCryptDecrypt(
+                m_keyHandle,
+                const_cast<PUCHAR>(inputData),
+                static_cast<ULONG>(inputSize),
+                &authInfo,
+                nullptr,
+                0,
                 outputData.data(),
                 static_cast<ULONG>(outputData.size()),
-                &decryptedSize,
+                &bytesWritten,
                 0
             );
 
@@ -366,13 +390,13 @@ namespace noty {
                 return false;
             }
 
-            outputData.resize(decryptedSize);
-            m_plaintextSize = decryptedSize;
+            outputData.resize(bytesWritten);
+            m_plaintextSize = bytesWritten;
             m_authValid = true;
 
             m_decrypting = false;
             Logger::instance().info("Buffer decryption complete: " +
-                std::to_string(inputSize) + " -> " + std::to_string(decryptedSize) + " bytes");
+                std::to_string(inputSize) + " -> " + std::to_string(bytesWritten) + " bytes");
             return true;
         }
         catch (const std::exception& e) {
@@ -396,7 +420,7 @@ namespace noty {
         const size_t progressUpdateInterval = m_bufferSize * 10;
 
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-        BCryptInitAuthenticatedCipherModeInfo(&authInfo);
+        initAuthInfo(&authInfo);
         authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
         authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
         authInfo.pbTag = const_cast<PUCHAR>(m_authTag.data());
@@ -404,10 +428,7 @@ namespace noty {
         authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
         authInfo.cbAuthData = static_cast<ULONG>(m_additionalData.size());
 
-        bool firstBlock = true;
-
         while (!inputStream.eof() && !m_cancelled) {
-            // Read encrypted data (leaving room for potential tag at end)
             inputStream.read(reinterpret_cast<char*>(m_inputBuffer.get()), m_bufferSize);
             size_t bytesRead = static_cast<size_t>(inputStream.gcount());
 
@@ -423,23 +444,42 @@ namespace noty {
                 &authInfo,
                 nullptr,
                 0,
-                m_outputBuffer.get(),
-                static_cast<ULONG>(m_bufferSize),
+                nullptr,
+                0,
                 &decryptedSize,
-                firstBlock ? 0 : BCRYPT_BLOCK_PADDING
+                0
             );
 
             if (status != 0) {
-                m_lastError = "BCryptDecrypt failed during streaming - data may be corrupted";
+                m_lastError = "BCryptDecrypt size query failed during streaming";
                 Logger::instance().error(m_lastError);
                 return false;
             }
 
-            firstBlock = false;
-
             if (decryptedSize > 0) {
-                outputStream.write(reinterpret_cast<const char*>(m_outputBuffer.get()), decryptedSize);
-                m_plaintextSize += decryptedSize;
+                std::vector<uint8_t> decryptedBuffer(decryptedSize);
+                ULONG bytesWritten = 0;
+                status = BCryptDecrypt(
+                    m_keyHandle,
+                    const_cast<PUCHAR>(m_inputBuffer.get()),
+                    static_cast<ULONG>(bytesRead),
+                    &authInfo,
+                    nullptr,
+                    0,
+                    decryptedBuffer.data(),
+                    static_cast<ULONG>(decryptedBuffer.size()),
+                    &bytesWritten,
+                    0
+                );
+
+                if (status != 0) {
+                    m_lastError = "BCryptDecrypt failed during streaming - data may be corrupted";
+                    Logger::instance().error(m_lastError);
+                    return false;
+                }
+
+                outputStream.write(reinterpret_cast<const char*>(decryptedBuffer.data()), bytesWritten);
+                m_plaintextSize += bytesWritten;
             }
 
             totalRead += bytesRead;
@@ -477,15 +517,13 @@ namespace noty {
         const size_t progressUpdateInterval = m_bufferSize * 10;
 
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
-        BCryptInitAuthenticatedCipherModeInfo(&authInfo);
+        initAuthInfo(&authInfo);
         authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
         authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
         authInfo.pbTag = const_cast<PUCHAR>(m_authTag.data());
         authInfo.cbTag = static_cast<ULONG>(m_authTag.size());
         authInfo.pbAuthData = m_additionalData.empty() ? nullptr : const_cast<PUCHAR>(m_additionalData.data());
         authInfo.cbAuthData = static_cast<ULONG>(m_additionalData.size());
-
-        bool firstBlock = true;
 
         while (!inputStream.eof() && !m_cancelled) {
             inputStream.read(reinterpret_cast<char*>(m_inputBuffer.get()), m_bufferSize);
@@ -503,23 +541,42 @@ namespace noty {
                 &authInfo,
                 nullptr,
                 0,
-                m_outputBuffer.get(),
-                static_cast<ULONG>(m_bufferSize),
+                nullptr,
+                0,
                 &decryptedSize,
-                firstBlock ? 0 : BCRYPT_BLOCK_PADDING
+                0
             );
 
             if (status != 0) {
-                m_lastError = "BCryptDecrypt failed during streaming";
+                m_lastError = "BCryptDecrypt size query failed during streaming";
                 Logger::instance().error(m_lastError);
                 return false;
             }
 
-            firstBlock = false;
-
             if (decryptedSize > 0) {
-                dataCallback(m_outputBuffer.get(), decryptedSize);
-                m_plaintextSize += decryptedSize;
+                std::vector<uint8_t> decryptedBuffer(decryptedSize);
+                ULONG bytesWritten = 0;
+                status = BCryptDecrypt(
+                    m_keyHandle,
+                    const_cast<PUCHAR>(m_inputBuffer.get()),
+                    static_cast<ULONG>(bytesRead),
+                    &authInfo,
+                    nullptr,
+                    0,
+                    decryptedBuffer.data(),
+                    static_cast<ULONG>(decryptedBuffer.size()),
+                    &bytesWritten,
+                    0
+                );
+
+                if (status != 0) {
+                    m_lastError = "BCryptDecrypt failed during streaming";
+                    Logger::instance().error(m_lastError);
+                    return false;
+                }
+
+                dataCallback(decryptedBuffer.data(), bytesWritten);
+                m_plaintextSize += bytesWritten;
             }
 
             totalRead += bytesRead;

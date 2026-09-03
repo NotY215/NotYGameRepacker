@@ -102,7 +102,7 @@ namespace noty {
         std::unique_ptr<PackageBuilder> m_packageBuilder;
 
         std::queue<RepackJob> m_jobQueue;
-        std::mutex m_queueMutex;
+        mutable std::mutex m_queueMutex;
         std::condition_variable m_queueCondition;
 
         std::unique_ptr<RepackJob> m_currentJob;

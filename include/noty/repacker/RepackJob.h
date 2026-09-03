@@ -8,9 +8,6 @@
 
 namespace noty {
 
-    /**
-     * @brief Represents a repacking job configuration and state
-     */
     class RepackJob {
     public:
         using ProgressCallback = std::function<void(int percent, const std::string& status)>;
@@ -38,29 +35,20 @@ namespace noty {
             std::string repackerName;
             std::string setupName;
 
-            // Compression settings
             int compressionLevel = 19;
-            size_t compressionBufferSize = 1024 * 1024; // 1MB
+            size_t compressionBufferSize = 1024 * 1024;
 
-            // Encryption settings
             bool enableEncryption = true;
             std::vector<uint8_t> encryptionKey;
             std::vector<uint8_t> encryptionNonce;
 
-            // Chunk settings
-            uint64_t maxChunkSize = 1024 * 1024 * 1024; // 1GB per chunk
-            uint32_t maxChunkCount = 0; // 0 = unlimited
+            uint64_t maxChunkSize = 1024 * 1024 * 1024;
+            uint32_t maxChunkCount = 0;
 
-            // Cover image
             std::string coverImagePath;
-
-            // Optional components
             std::vector<ComponentInfo> components;
-
-            // Hash algorithm
             std::string hashAlgorithm = "BLAKE3";
 
-            // Additional settings
             bool includeHiddenFiles = false;
             bool generateSetup = true;
         };
@@ -69,32 +57,25 @@ namespace noty {
         explicit RepackJob(const Configuration& config);
         ~RepackJob();
 
-        // Non-copyable
         RepackJob(const RepackJob&) = delete;
         RepackJob& operator=(const RepackJob&) = delete;
 
-        // Movable
         RepackJob(RepackJob&& other) noexcept;
         RepackJob& operator=(RepackJob&& other) noexcept;
 
-        // Configuration
         const Configuration& getConfiguration() const { return m_config; }
         void setConfiguration(const Configuration& config) { m_config = config; }
 
-        // State management
         State getState() const { return m_state.load(std::memory_order_acquire); }
         void setState(State state) { m_state.store(state, std::memory_order_release); }
         std::string getStateString() const;
 
-        // Progress
         int getProgress() const { return m_progress.load(std::memory_order_acquire); }
         void setProgress(int percent) { m_progress.store(percent, std::memory_order_release); }
 
-        // Status message
         std::string getStatus() const { return m_status; }
         void setStatus(const std::string& status) { m_status = status; }
 
-        // Timing
         std::chrono::steady_clock::time_point getStartTime() const { return m_startTime; }
         void setStartTime(std::chrono::steady_clock::time_point time) { m_startTime = time; }
 
@@ -103,7 +84,6 @@ namespace noty {
 
         uint64_t getElapsedMilliseconds() const;
 
-        // Results
         const Manifest& getManifest() const { return m_manifest; }
         Manifest& getManifest() { return m_manifest; }
 
@@ -116,19 +96,15 @@ namespace noty {
         const std::vector<std::string>& getOutputFiles() const { return m_outputFiles; }
         void addOutputFile(const std::string& file) { m_outputFiles.push_back(file); }
 
-        // Error handling
         std::string getLastError() const { return m_lastError; }
         void setLastError(const std::string& error) { m_lastError = error; }
 
-        // Cancellation
         void cancel() { m_cancelled.store(true, std::memory_order_release); }
         bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
-        // Callbacks
         void setProgressCallback(ProgressCallback callback) { m_progressCallback = callback; }
         void notifyProgress(int percent, const std::string& status);
 
-        // Validation
         bool validate() const;
         std::string getValidationError() const { return m_validationError; }
 

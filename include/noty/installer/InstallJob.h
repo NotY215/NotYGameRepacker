@@ -9,9 +9,6 @@
 
 namespace noty {
 
-    /**
-     * @brief Represents an installation job configuration and state
-     */
     class InstallJob {
     public:
         using ProgressCallback = std::function<void(int percent, const std::string& status)>;
@@ -28,15 +25,14 @@ namespace noty {
         };
 
         struct Configuration {
-            std::string packagePath;           // Path to .noty package or manifest
-            std::string installDirectory;      // Where to install the game
-            std::string gameName;              // Game name for display
-            bool verifyFiles = true;           // Verify file integrity after extraction
+            std::string packagePath;
+            std::string installDirectory;
+            std::string gameName;
+            bool verifyFiles = true;
             bool createDesktopShortcut = false;
             bool createStartMenuShortcut = false;
-            std::vector<std::string> selectedComponents; // Optional components to install
+            std::vector<std::string> selectedComponents;
 
-            // Encryption settings (must match package)
             bool enableEncryption = false;
             std::vector<uint8_t> encryptionKey;
             std::vector<uint8_t> encryptionNonce;
@@ -46,32 +42,25 @@ namespace noty {
         explicit InstallJob(const Configuration& config);
         ~InstallJob();
 
-        // Non-copyable
         InstallJob(const InstallJob&) = delete;
         InstallJob& operator=(const InstallJob&) = delete;
 
-        // Movable
         InstallJob(InstallJob&& other) noexcept;
         InstallJob& operator=(InstallJob&& other) noexcept;
 
-        // Configuration
         const Configuration& getConfiguration() const { return m_config; }
         void setConfiguration(const Configuration& config) { m_config = config; }
 
-        // State management
         State getState() const { return m_state.load(std::memory_order_acquire); }
         void setState(State state) { m_state.store(state, std::memory_order_release); }
         std::string getStateString() const;
 
-        // Progress
         int getProgress() const { return m_progress.load(std::memory_order_acquire); }
         void setProgress(int percent) { m_progress.store(percent, std::memory_order_release); }
 
-        // Status message
         std::string getStatus() const { return m_status; }
         void setStatus(const std::string& status) { m_status = status; }
 
-        // Timing
         std::chrono::steady_clock::time_point getStartTime() const { return m_startTime; }
         void setStartTime(std::chrono::steady_clock::time_point time) { m_startTime = time; }
 
@@ -80,7 +69,6 @@ namespace noty {
 
         uint64_t getElapsedMilliseconds() const;
 
-        // Results
         const Manifest& getManifest() const { return m_manifest; }
         Manifest& getManifest() { return m_manifest; }
 
@@ -90,23 +78,18 @@ namespace noty {
         uint64_t getExtractedFileCount() const { return m_extractedFileCount; }
         void setExtractedFileCount(uint64_t count) { m_extractedFileCount = count; }
 
-        // Error handling
         std::string getLastError() const { return m_lastError; }
         void setLastError(const std::string& error) { m_lastError = error; }
 
-        // Cancellation
         void cancel() { m_cancelled.store(true, std::memory_order_release); }
         bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
-        // Callbacks
         void setProgressCallback(ProgressCallback callback) { m_progressCallback = callback; }
         void notifyProgress(int percent, const std::string& status);
 
-        // Validation
         bool validate() const;
         std::string getValidationError() const { return m_validationError; }
 
-        // Component selection
         bool isComponentSelected(const std::string& componentName) const;
         void selectComponent(const std::string& componentName);
         void deselectComponent(const std::string& componentName);
