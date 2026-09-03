@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>logo.png</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file>fonts/Rubik-Regular.ttf</file>
+        <file>fonts/Rubik-Medium.ttf</file>
+        <file>fonts/Rubik-SemiBold.ttf</file>
+        <file>fonts/Rubik-Bold.ttf</file>
+        <file>fonts/Rubik-ExtraBold.ttf</file>
+        <file>fonts/Rubik-Black.ttf</file>
+    </qresource>
+</RCC>

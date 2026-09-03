@@ -1,0 +1,164 @@
+================================================================================
+FILE: ui/repacker/WelcomePage.ui
+================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+	<class>WelcomePage</class>
+	<widget class="QWidget" name="WelcomePage">
+		<property name="geometry">
+			<rect>
+				<x>0</x>
+				<y>0</y>
+				<width>900</width>
+				<height>700</height>
+			</rect>
+		</property>
+		<property name="windowTitle">
+			<string>Welcome</string>
+		</property>
+		<property name="styleSheet">
+			<string notr="true">
+				QWidget {
+				background-color: #1a1a1a;
+				}
+			</string>
+		</property>
+		<layout class="QVBoxLayout" name="verticalLayout">
+			<property name="spacing">
+				<number>25</number>
+			</property>
+			<property name="leftMargin">
+				<number>60</number>
+			</property>
+			<property name="topMargin">
+				<number>60</number>
+			</property>
+			<property name="rightMargin">
+				<number>60</number>
+			</property>
+			<property name="bottomMargin">
+				<number>60</number>
+			</property>
+			<item>
+				<widget class="QLabel" name="logoLabel">
+					<property name="text">
+						<string>📦</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignCenter</set>
+					</property>
+					<property name="styleSheet">
+						<string notr="true">font-size: 72px;</string>
+					</property>
+				</widget>
+			</item>
+			<item>
+				<widget class="QLabel" name="titleLabel">
+					<property name="text">
+						<string>NotY Game Repacker</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignCenter</set>
+					</property>
+					<property name="styleSheet">
+						<string notr="true">
+							font-size: 28px;
+							font-weight: 800;
+							color: #ffffff;
+							font-family: Rubik;
+						</string>
+					</property>
+				</widget>
+			</item>
+			<item>
+				<widget class="QLabel" name="subtitleLabel">
+					<property name="text">
+						<string>Professional Game Packaging System</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignCenter</set>
+					</property>
+					<property name="styleSheet">
+						<string notr="true">
+							font-size: 14px;
+							color: #888888;
+							font-family: Rubik;
+						</string>
+					</property>
+				</widget>
+			</item>
+			<item>
+				<widget class="QLabel" name="brandLabel">
+					<property name="text">
+						<string>Powered by NotY215</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignCenter</set>
+					</property>
+					<property name="styleSheet">
+						<string notr="true">
+							font-size: 12px;
+							color: #4CAF50;
+							font-weight: bold;
+							font-family: Rubik;
+						</string>
+					</property>
+				</widget>
+			</item>
+			<item>
+				<spacer name="verticalSpacer">
+					<property name="orientation">
+						<enum>Qt::Vertical</enum>
+					</property>
+					<property name="sizeHint" stdset="0">
+						<size>
+							<width>20</width>
+							<height>20</height>
+						</size>
+					</property>
+				</spacer>
+			</item>
+			<item>
+				<widget class="QLabel" name="descriptionLabel">
+					<property name="text">
+						<string>
+							This tool will guide you through packaging your game files into a
+							compressed, encrypted, and verified .noty package.
+
+							The generated Setup.exe will allow users to install your game
+							with a professional installer interface.
+						</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignCenter</set>
+					</property>
+					<property name="wordWrap">
+						<bool>true</bool>
+					</property>
+					<property name="styleSheet">
+						<string notr="true">
+							color: #aaaaaa;
+							font-size: 12px;
+							font-family: Rubik;
+						</string>
+					</property>
+				</widget>
+			</item>
+			<item>
+				<spacer name="verticalSpacer_2">
+					<property name="orientation">
+						<enum>Qt::Vertical</enum>
+					</property>
+					<property name="sizeHint" stdset="0">
+						<size>
+							<width>20</width>
+							<height>40</height>
+						</size>
+					</property>
+				</spacer>
+			</item>
+		</layout>
+	</widget>
+	<resources/>
+	<connections/>
+</ui>

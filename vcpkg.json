@@ -1,0 +1,28 @@
+{
+  "name": "noty-game-repacker",
+  "version": "1.0.0",
+  "description": "Professional Windows game packaging/repacking system",
+  "homepage": "https://github.com",
+  "license": "MIT",
+  "supports": "windows & x64",
+  "builtin-baseline": "7ff71c68261ecf3b60cdb8772f2e6759ee0a71b1",
+  "dependencies": [
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [
+        "gui",
+        "widgets",
+        "network",
+        "concurrent",
+        "opengl",
+        "freetype",
+        "harfbuzz",
+        "png"
+      ]
+    },
+    "zstd",
+    "nlohmann-json",
+    "blake3"
+  ]
+}

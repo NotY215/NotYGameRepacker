@@ -1,0 +1,414 @@
+================================================================================
+FILE: ui/repacker/ReviewPage.ui
+================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ReviewPage</class>
+ <widget class="QWidget" name="ReviewPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Review Configuration</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget {
+    background-color: #1a1a1a;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>20</number>
+   </property>
+   <property name="leftMargin">
+    <number>50</number>
+   </property>
+   <property name="topMargin">
+    <number>40</number>
+   </property>
+   <property name="rightMargin">
+    <number>50</number>
+   </property>
+   <property name="bottomMargin">
+    <number>40</number>
+   </property>
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Review Configuration</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 20px;
+font-weight: 600;
+color: #ffffff;
+font-family: Rubik;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="descriptionLabel">
+     <property name="text">
+      <string>Please review your package configuration before proceeding.</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="reviewGroup">
+     <property name="title">
+      <string>Configuration Summary</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QGroupBox {
+    border: 1px solid #333333;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+    color: #aaaaaa;
+    font-family: Rubik;
+}</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>20</number>
+      </property>
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <property name="rightMargin">
+       <number>20</number>
+      </property>
+      <property name="bottomMargin">
+       <number>20</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="reviewSourceLabel_2">
+        <property name="text">
+         <string>Source Directory:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="reviewSourceLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="reviewOutputLabel_2">
+        <property name="text">
+         <string>Output Directory:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="reviewOutputLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="reviewGameNameLabel_2">
+        <property name="text">
+         <string>Game Name:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="reviewGameNameLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="reviewGameVersionLabel_2">
+        <property name="text">
+         <string>Game Version:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="reviewGameVersionLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="reviewRepackerLabel_2">
+        <property name="text">
+         <string>Repacker:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="reviewRepackerLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="reviewSetupNameLabel_2">
+        <property name="text">
+         <string>Setup Name:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="reviewSetupNameLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="reviewCoverLabel_2">
+        <property name="text">
+         <string>Cover Image:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLabel" name="reviewCoverLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="reviewCompressionLabel_2">
+        <property name="text">
+         <string>Compression:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLabel" name="reviewCompressionLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="reviewChunkSizeLabel_2">
+        <property name="text">
+         <string>Chunk Size:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLabel" name="reviewChunkSizeLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="reviewEncryptionLabel_2">
+        <property name="text">
+         <string>Encryption:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLabel" name="reviewEncryptionLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QLabel" name="reviewHiddenFilesLabel_2">
+        <property name="text">
+         <string>Hidden Files:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
+       <widget class="QLabel" name="reviewHiddenFilesLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0">
+       <widget class="QLabel" name="reviewGenerateSetupLabel_2">
+        <property name="text">
+         <string>Generate Setup:</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #aaaaaa;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="1">
+       <widget class="QLabel" name="reviewGenerateSetupLabel">
+        <property name="text">
+         <string>--</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffffff;
+font-family: Rubik;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="warningLabel">
+     <property name="text">
+      <string>⚠️ Please review all settings carefully before starting.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #FFC107;
+font-weight: bold;
+padding: 10px;
+border: 1px solid #FFC107;
+border-radius: 4px;
+font-family: Rubik;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
