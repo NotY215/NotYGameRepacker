@@ -264,7 +264,8 @@ namespace noty {
 
                 if (total > 0) {
                     double usage = 100.0 - (100.0 * idleDelta / total);
-                    m_cpuUsage = std::max(0.0, std::min(100.0, usage));
+                    double clamped = std::max(0.0, std::min(100.0, usage));
+                    m_cpuUsage = clamped;
                 }
             }
 

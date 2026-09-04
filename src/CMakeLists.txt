@@ -4,7 +4,6 @@
 add_library(NotYCore STATIC
     # Common
     common/Version.cpp
-    common/Constants.cpp
     common/Logger.cpp
     common/Error.cpp
     
