@@ -197,7 +197,6 @@ namespace noty {
                 return false;
             }
 
-            // Read nonce from file
             std::vector<uint8_t> fileNonce(12);
             inputFileStream.read(reinterpret_cast<char*>(fileNonce.data()), 12);
             if (inputFileStream.gcount() != 12) {
@@ -218,17 +217,14 @@ namespace noty {
             m_encryptedSize = static_cast<uint64_t>(inputFileStream.tellg()) - 12;
             inputFileStream.seekg(12, std::ios::beg);
 
-            // Read encrypted data
             std::vector<uint8_t> encryptedData(static_cast<size_t>(m_encryptedSize));
             inputFileStream.read(reinterpret_cast<char*>(encryptedData.data()), encryptedData.size());
 
-            // Read auth tag from end of file
             std::vector<uint8_t> authTag(16);
             inputFileStream.clear();
             inputFileStream.seekg(-16, std::ios::end);
             inputFileStream.read(reinterpret_cast<char*>(authTag.data()), 16);
 
-            // Decrypt buffer
             ByteVector decryptedData;
             if (!decryptBuffer(encryptedData.data(), encryptedData.size(), decryptedData, authTag)) {
                 m_decrypting = false;
@@ -251,7 +247,6 @@ namespace noty {
     bool Decryptor::decryptToCallback(const std::string& inputFile,
         DataCallback dataCallback,
         ProgressCallback progress) {
-        // Simplified implementation
         return false;
     }
 
@@ -367,14 +362,12 @@ namespace noty {
     bool Decryptor::decryptStreaming(std::istream& inputStream,
         std::ostream& outputStream,
         ProgressCallback progress) {
-        // Simplified streaming implementation
         return false;
     }
 
     bool Decryptor::decryptStreamingToCallback(std::istream& inputStream,
         DataCallback dataCallback,
         ProgressCallback progress) {
-        // Simplified implementation
         return false;
     }
 

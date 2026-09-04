@@ -21,13 +21,13 @@ include(QtDeployment)
 # Find Qt6
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 
-# Find Zstd
-find_package(zstd REQUIRED)
+# Find Zstd - use CONFIG mode with REQUIRED
+find_package(zstd CONFIG REQUIRED)
 
-# Find nlohmann_json
-find_package(nlohmann_json REQUIRED)
+# Find nlohmann_json - use CONFIG mode with REQUIRED
+find_package(nlohmann_json CONFIG REQUIRED)
 
-# Find BLAKE3
+# Find BLAKE3 - use CONFIG mode with REQUIRED
 find_package(blake3 CONFIG REQUIRED)
 
 # Resource file (includes fonts and icons)

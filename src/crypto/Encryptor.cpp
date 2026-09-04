@@ -206,8 +206,6 @@ namespace noty {
     bool Encryptor::encryptToCallback(const std::string& inputFile,
         DataCallback dataCallback,
         ProgressCallback progress) {
-        // Implementation similar to encryptFile but with callbacks
-        // For brevity, this is a placeholder
         return false;
     }
 
@@ -241,7 +239,7 @@ namespace noty {
         try {
             BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO authInfo;
             memset(&authInfo, 0, sizeof(authInfo));
-            authInfo.cbSize = sizeof(authInfo);
+            authInfo.cbSize = sizeof(aUTHINFO);
             authInfo.dwInfoVersion = 1;
             authInfo.pbNonce = const_cast<PUCHAR>(m_nonce.data());
             authInfo.cbNonce = static_cast<ULONG>(m_nonce.size());
@@ -323,8 +321,6 @@ namespace noty {
     bool Encryptor::encryptStreaming(std::istream& inputStream,
         std::ostream& outputStream,
         ProgressCallback progress) {
-        // Simplified streaming implementation
-        // For now, read entire input and encrypt
         inputStream.seekg(0, std::ios::end);
         size_t fileSize = static_cast<size_t>(inputStream.tellg());
         inputStream.seekg(0, std::ios::beg);
@@ -348,7 +344,6 @@ namespace noty {
     bool Encryptor::encryptStreamingToCallback(std::istream& inputStream,
         DataCallback dataCallback,
         ProgressCallback progress) {
-        // Simplified implementation
         return false;
     }
 

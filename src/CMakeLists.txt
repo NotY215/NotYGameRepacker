@@ -56,16 +56,15 @@ target_include_directories(NotYCore
         ${CMAKE_BINARY_DIR}/generated
 )
 
-# Link dependencies
-# Using find_package variables directly for better compatibility
+# Link dependencies using targets
 target_link_libraries(NotYCore
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        nlohmann_json::nlohmann_json
     PRIVATE
-        ${ZSTD_LIBRARIES}
-        ${BLAKE3_LIBRARIES}
+        nlohmann_json::nlohmann_json
+        zstd::libzstd
+        BLAKE3::blake3
         bcrypt
         advapi32
         psapi
@@ -79,8 +78,6 @@ target_include_directories(NotYCore
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
-        ${ZSTD_INCLUDE_DIRS}
-        ${BLAKE3_INCLUDE_DIRS}
 )
 
 # Add compiler options for the library

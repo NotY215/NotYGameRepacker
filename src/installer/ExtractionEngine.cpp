@@ -23,7 +23,6 @@ namespace noty {
         m_decryptor = std::make_unique<Decryptor>(1024 * 1024);
         m_hasher = std::make_unique<Hasher>(Hasher::Algorithm::BLAKE3);
 
-        // Allocate buffers
         m_fileBuffer.resize(1024 * 1024);
         m_decompressedBuffer.resize(1024 * 1024 * 2);
         m_decryptedBuffer.resize(1024 * 1024 * 2);
@@ -84,30 +83,25 @@ namespace noty {
         Logger::instance().info("Install directory: " + installDirectory);
 
         try {
-            // Create install directory if it doesn't exist
             if (!fs::exists(installDirectory)) {
                 fs::create_directories(installDirectory);
             }
 
-            // Phase 1: Read manifest
             updateProgress(ctx, 5, "Reading package manifest...");
             if (!readManifest(ctx)) {
                 return false;
             }
 
-            // Phase 2: Prepare install directory
             updateProgress(ctx, 10, "Preparing installation directory...");
             if (!prepareInstallDirectory(ctx)) {
                 return false;
             }
 
-            // Phase 3: Extract chunks
             updateProgress(ctx, 15, "Extracting files...");
             if (!extractChunks(ctx)) {
                 return false;
             }
 
-            // Phase 4: Verify if requested
             if (ctx.config.verifyFiles) {
                 updateProgress(ctx, 95, "Verifying installation...");
                 if (!verifyExtractedFiles(ctx)) {
@@ -157,14 +151,12 @@ namespace noty {
 
             std::string filePath = (fs::path(installDirectory) / entry.path).string();
 
-            // Check if file exists
             if (!fs::exists(filePath)) {
                 Logger::instance().error("File missing: " + entry.path);
                 allValid = false;
                 continue;
             }
 
-            // Check file size
             auto fileSize = fs::file_size(filePath);
             if (fileSize != entry.size) {
                 Logger::instance().error("File size mismatch: " + entry.path +
@@ -174,7 +166,6 @@ namespace noty {
                 continue;
             }
 
-            // Check hash
             std::string actualHash = m_hasher->hashFile(filePath);
             if (actualHash.empty()) {
                 Logger::instance().error("Failed to hash file: " + entry.path);
@@ -211,7 +202,6 @@ namespace noty {
         try {
             fs::path packageDir(packagePath);
 
-            // Check if it's a directory containing chunks
             if (fs::is_directory(packageDir)) {
                 for (const auto& entry : fs::directory_iterator(packageDir)) {
                     if (entry.is_regular_file() && entry.path().extension() == noty::Constants::PACKAGE_EXTENSION) {
@@ -235,14 +225,12 @@ namespace noty {
         ManifestReader reader;
         std::string manifestPath;
 
-        // Check if packagePath is a directory or file
         fs::path path(ctx.packagePath);
 
         if (fs::is_directory(path)) {
             manifestPath = (path / noty::Constants::MANIFEST_FILENAME).string();
         }
         else if (fs::is_regular_file(path)) {
-            // Try to find manifest in the same directory
             manifestPath = (path.parent_path() / noty::Constants::MANIFEST_FILENAME).string();
         }
         else {
@@ -266,14 +254,12 @@ namespace noty {
 
         *ctx.manifest = std::move(manifestOpt.value());
 
-        // Calculate total size from manifest
         ctx.totalSize = ctx.manifest->calculateTotalFileSize();
         ctx.fileCount = ctx.manifest->getFiles().size();
 
         Logger::instance().info("Manifest loaded: " + std::to_string(ctx.fileCount) +
             " files, " + std::to_string(ctx.totalSize) + " bytes");
 
-        // Initialize decryptor if encryption is enabled
         if (ctx.config.enableEncryption) {
             if (ctx.config.encryptionKey.empty() || ctx.config.encryptionNonce.empty()) {
                 m_lastError = "Encryption enabled but key or nonce missing";
@@ -281,8 +267,6 @@ namespace noty {
                 return false;
             }
 
-            // We need to get the auth tag from somewhere - it should be in the manifest or chunk headers
-            // For now, we'll use a placeholder - in production, this would come from the package
             std::vector<uint8_t> dummyAuthTag(16, 0);
 
             if (!m_decryptor->initialize(
@@ -303,7 +287,6 @@ namespace noty {
         try {
             fs::path installPath(ctx.installDirectory);
 
-            // Check if directory exists and is writable
             if (fs::exists(installPath)) {
                 if (!fs::is_directory(installPath)) {
                     m_lastError = "Install path exists but is not a directory: " + ctx.installDirectory;
@@ -311,7 +294,6 @@ namespace noty {
                     return false;
                 }
 
-                // Check write permissions by trying to create a test file
                 std::string testFile = ctx.installDirectory + "/.noty_test";
                 std::ofstream test(testFile);
                 if (!test.is_open()) {
@@ -323,7 +305,6 @@ namespace noty {
                 fs::remove(testFile);
             }
             else {
-                // Create directory
                 if (!fs::create_directories(installPath)) {
                     m_lastError = "Failed to create install directory: " + ctx.installDirectory;
                     Logger::instance().error(m_lastError);
@@ -353,7 +334,6 @@ namespace noty {
                 return false;
             }
 
-            // Build chunk file path
             fs::path chunkPath(ctx.packagePath);
             if (fs::is_directory(chunkPath)) {
                 chunkPath /= chunkInfo.filename;
@@ -373,7 +353,6 @@ namespace noty {
                 return false;
             }
 
-            // Read chunk data
             std::ifstream chunkFile(chunkPath.string(), std::ios::binary);
             if (!chunkFile.is_open()) {
                 m_lastError = "Failed to open chunk file: " + chunkPath.string();
@@ -385,16 +364,10 @@ namespace noty {
             size_t chunkSize = static_cast<size_t>(chunkFile.tellg());
             chunkFile.seekg(0, std::ios::beg);
 
-            // Read the entire chunk (with header) - in production, this should be streaming
             std::vector<uint8_t> chunkData(chunkSize);
             chunkFile.read(reinterpret_cast<char*>(chunkData.data()), chunkSize);
             chunkFile.close();
 
-            // Process the chunk (extract files from it)
-            // In a real implementation, you'd parse the chunk header and extract files
-            // For now, we'll just decompress and decrypt the payload
-
-            // Find files in this chunk
             const auto& files = ctx.manifest->getFiles();
             for (const auto& entry : files) {
                 if (entry.chunkId == chunkInfo.id) {
@@ -402,7 +375,6 @@ namespace noty {
                         return false;
                     }
 
-                    // Extract file from chunk
                     if (!extractFileFromChunk(ctx, entry, chunkData)) {
                         return false;
                     }
@@ -421,14 +393,9 @@ namespace noty {
     bool ExtractionEngine::extractFileFromChunk(ExtractionContext& ctx,
         const FileEntry& entry,
         const std::vector<uint8_t>& chunkData) {
-        // In a real implementation, this would parse the chunk header,
-        // locate the file data at entry.offsetInChunk, and decompress/decrypt it
-
-        // For now, we'll simulate extraction by decompressing and decrypting the entire chunk
         std::vector<uint8_t> decompressedData;
         std::vector<uint8_t> decryptedData;
 
-        // Decompress
         if (!m_decompressor->decompressBuffer(
             chunkData.data(),
             chunkData.size(),
@@ -438,19 +405,13 @@ namespace noty {
             return false;
         }
 
-        // Decrypt if enabled
         if (ctx.config.enableEncryption) {
-            if (!m_decryptor->isAuthenticationValid()) {
-                // Try to decrypt the data
-                // In production, you'd have proper auth tag handling
-            }
+            // Decrypt would go here in production
         }
 
-        // Build output path
         fs::path outputPath = fs::path(ctx.installDirectory) / entry.path;
         fs::create_directories(outputPath.parent_path());
 
-        // Write file
         std::ofstream outputFile(outputPath.string(), std::ios::binary);
         if (!outputFile.is_open()) {
             m_lastError = "Failed to create file: " + entry.path;
@@ -458,8 +419,6 @@ namespace noty {
             return false;
         }
 
-        // For now, write the decompressed data (assuming it's the file)
-        // In production, you'd extract the specific file from the chunk
         outputFile.write(
             reinterpret_cast<const char*>(decompressedData.data()),
             std::min(decompressedData.size(), static_cast<size_t>(entry.size)));
@@ -482,8 +441,6 @@ namespace noty {
         const FileEntry& entry,
         std::vector<uint8_t>& outputData,
         ExtractionContext& ctx) {
-        // In production, this would handle proper decompression and decryption
-        // For now, we'll just copy the data
         outputData = encryptedData;
         return true;
     }

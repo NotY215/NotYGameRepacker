@@ -27,7 +27,6 @@ namespace noty {
         m_keyManager = std::make_unique<KeyManager>();
         m_hasher = std::make_unique<Hasher>(Hasher::Algorithm::BLAKE3);
 
-        // Allocate buffers
         m_fileBuffer.resize(1024 * 1024);
         m_compressedBuffer.resize(1024 * 1024 * 2);
         m_encryptedBuffer.resize(1024 * 1024 * 2);
@@ -95,48 +94,40 @@ namespace noty {
         Logger::instance().info("Starting package build for: " + sourceDirectory);
 
         try {
-            // Create output directory if it doesn't exist
             if (!fs::exists(outputDirectory)) {
                 fs::create_directories(outputDirectory);
             }
 
-            // Phase 1: Scan source directory
             updateProgress(ctx, 5, "Scanning source directory...");
             if (!scanSourceDirectory(ctx)) {
                 return false;
             }
 
-            // Phase 2: Calculate hashes
             updateProgress(ctx, 15, "Calculating file hashes...");
             if (!calculateHashes(ctx)) {
                 return false;
             }
 
-            // Phase 3: Build chunks (compress and encrypt)
             updateProgress(ctx, 25, "Building chunks...");
             if (!buildChunks(ctx)) {
                 return false;
             }
 
-            // Phase 4: Write chunks to disk
             updateProgress(ctx, 75, "Writing chunks...");
             if (!writeChunks(ctx)) {
                 return false;
             }
 
-            // Phase 5: Write manifest
             updateProgress(ctx, 85, "Writing manifest...");
             if (!writeManifest(ctx)) {
                 return false;
             }
 
-            // Phase 6: Write cover image
             updateProgress(ctx, 90, "Writing cover image...");
             if (!writeCoverImage(ctx)) {
                 return false;
             }
 
-            // Phase 7: Generate setup.exe
             if (config.generateSetup) {
                 updateProgress(ctx, 92, "Generating setup...");
                 if (!generateSetup(ctx)) {
@@ -146,7 +137,6 @@ namespace noty {
 
             updateProgress(ctx, 100, "Package build complete!");
 
-            // Update manifest
             manifest.setPackageInfo(ctx.manifest->getPackageInfo());
 
             Logger::instance().info("Package build complete: " +
@@ -218,7 +208,6 @@ namespace noty {
             entry.path = fileInfo.relativePath;
             entry.size = fileInfo.size;
 
-            // Calculate hash
             std::string hash = m_hasher->hashFile(fileInfo.path);
             if (hash.empty()) {
                 m_lastError = "Failed to hash file: " + fileInfo.path;
@@ -256,7 +245,6 @@ namespace noty {
                 return false;
             }
 
-            // Find the file info
             auto it = std::find_if(ctx.files.begin(), ctx.files.end(),
                 [&entry](const FileInfo& info) {
                     return info.relativePath == entry.path;
@@ -266,20 +254,16 @@ namespace noty {
                 continue;
             }
 
-            // Compress and encrypt the file
             std::vector<uint8_t> chunkData;
             if (!compressAndEncryptFile(*it, ctx, entry, chunkData)) {
                 return false;
             }
 
-            // Add to current chunk
             entry.offsetInChunk = ctx.currentChunkData.size();
-            size_t oldSize = ctx.currentChunkData.size();
             ctx.currentChunkData.insert(ctx.currentChunkData.end(),
                 chunkData.begin(), chunkData.end());
             ctx.currentChunkSize += chunkData.size();
 
-            // Check if chunk is full
             if (ctx.currentChunkSize >= ctx.config.maxChunkSize) {
                 if (!finalizeChunk(ctx)) {
                     return false;
@@ -292,14 +276,12 @@ namespace noty {
             updateFileProgress(ctx, entry.path, percent);
         }
 
-        // Finalize the last chunk if it has data
         if (!ctx.currentChunkData.empty()) {
             if (!finalizeChunk(ctx)) {
                 return false;
             }
         }
 
-        // Update manifest with chunk information
         ctx.manifest->setChunks(ctx.chunks);
         ctx.manifest->m_packageInfo.chunkCount = static_cast<uint32_t>(ctx.chunks.size());
         ctx.manifest->m_packageInfo.fileCount = static_cast<uint32_t>(ctx.fileEntries.size());
@@ -314,7 +296,6 @@ namespace noty {
         BuildContext& ctx,
         FileEntry& entry,
         std::vector<uint8_t>& chunkData) {
-        // Read the file
         std::ifstream file(fileInfo.path, std::ios::binary);
         if (!file.is_open()) {
             m_lastError = "Failed to open file: " + fileInfo.path;
@@ -330,7 +311,6 @@ namespace noty {
         file.read(reinterpret_cast<char*>(fileData.data()), fileSize);
         file.close();
 
-        // Compress the data
         ByteVector compressedData;
         m_compressor->setCompressionLevel(ctx.config.compressionLevel);
 
@@ -342,10 +322,7 @@ namespace noty {
 
         entry.compressedSize = compressedData.size();
 
-        // Encrypt the data if enabled
         if (ctx.config.enableEncryption) {
-            // Initialize encryptor for this file
-            // Note: In production, you might want to use a single encryptor instance
             Encryptor fileEncryptor;
 
             if (!fileEncryptor.initialize(
@@ -370,11 +347,7 @@ namespace noty {
                 return false;
             }
 
-            // Store the encrypted data
             chunkData = std::move(encryptedData);
-
-            // Store auth tag for later use
-            // In production, you'd store this in the manifest
         }
         else {
             chunkData = std::move(compressedData);
@@ -393,14 +366,16 @@ namespace noty {
 
         ChunkInfo chunk;
         chunk.id = ctx.currentChunkId++;
-        chunk.filename = ctx.config.gameName + "." +
-            std::to_string(chunk.id).insert(0, 3 - std::to_string(chunk.id).length(), '0') +
-            noty::Constants::PACKAGE_EXTENSION;
+        
+        std::string chunkNum = std::to_string(chunk.id);
+        while (chunkNum.length() < 3) {
+            chunkNum = "0" + chunkNum;
+        }
+        chunk.filename = ctx.config.gameName + "." + chunkNum + noty::Constants::PACKAGE_EXTENSION;
         chunk.uncompressedSize = ctx.currentChunkData.size();
-        chunk.compressedSize = chunk.uncompressedSize; // Already compressed
-        chunk.fileCount = 0; // Will be set when writing
+        chunk.compressedSize = chunk.uncompressedSize;
+        chunk.fileCount = 0;
 
-        // Calculate chunk checksum
         std::string checksum = m_hasher->hashData(ctx.currentChunkData);
         chunk.checksum = checksum;
 
@@ -412,60 +387,45 @@ namespace noty {
     }
 
     bool PackageBuilder::writeChunks(BuildContext& ctx) {
-        // For simplicity, we'll write chunks as we go
-        // In a real implementation, you'd store chunk data in memory or temp files
-
         size_t chunkIndex = 0;
         for (auto& chunk : ctx.chunks) {
-            // Build the full chunk data with header
             std::vector<uint8_t> fullChunkData;
 
-            // Write magic header
             const char* magic = "NOTY";
             fullChunkData.insert(fullChunkData.end(), magic, magic + 4);
 
-            // Write version
             uint32_t version = 1;
             uint8_t* versionBytes = reinterpret_cast<uint8_t*>(&version);
             fullChunkData.insert(fullChunkData.end(), versionBytes, versionBytes + 4);
 
-            // Write chunk ID
             uint32_t chunkId = chunk.id;
             uint8_t* chunkIdBytes = reinterpret_cast<uint8_t*>(&chunkId);
             fullChunkData.insert(fullChunkData.end(), chunkIdBytes, chunkIdBytes + 4);
 
-            // Write total chunks
             uint32_t totalChunks = static_cast<uint32_t>(ctx.chunks.size());
             uint8_t* totalBytes = reinterpret_cast<uint8_t*>(&totalChunks);
             fullChunkData.insert(fullChunkData.end(), totalBytes, totalBytes + 4);
 
-            // Write compression method
             const char* compression = "ZSTD";
             fullChunkData.insert(fullChunkData.end(), compression, compression + 4);
 
-            // Write encryption method
             const char* encryption = ctx.config.enableEncryption ? "AES-GCM" : "NONE";
             fullChunkData.insert(fullChunkData.end(), encryption, encryption + 4);
 
-            // Write uncompressed size
             uint64_t uncompressedSize = chunk.uncompressedSize;
             uint8_t* uncompressedBytes = reinterpret_cast<uint8_t*>(&uncompressedSize);
             fullChunkData.insert(fullChunkData.end(), uncompressedBytes, uncompressedBytes + 8);
 
-            // Write compressed size
             uint64_t compressedSize = chunk.compressedSize;
             uint8_t* compressedBytes = reinterpret_cast<uint8_t*>(&compressedSize);
             fullChunkData.insert(fullChunkData.end(), compressedBytes, compressedBytes + 8);
 
-            // Write checksum
             fullChunkData.insert(fullChunkData.end(),
                 chunk.checksum.begin(), chunk.checksum.end());
 
-            // Write the actual chunk data
             fullChunkData.insert(fullChunkData.end(),
                 ctx.currentChunkData.begin(), ctx.currentChunkData.end());
 
-            // Write to file
             std::string chunkPath = (fs::path(ctx.outputDirectory) / chunk.filename).string();
             std::ofstream chunkFile(chunkPath, std::ios::binary);
             if (!chunkFile.is_open()) {
@@ -481,7 +441,6 @@ namespace noty {
             m_chunkPaths.push_back(chunkPath);
             chunkIndex++;
 
-            // Update progress
             int percent = 75 + (chunkIndex * 10 / ctx.chunks.size());
             updateProgress(ctx, percent, "Writing chunk " +
                 std::to_string(chunk.id) + "/" + std::to_string(ctx.chunks.size()));
@@ -493,7 +452,6 @@ namespace noty {
     bool PackageBuilder::writeManifest(BuildContext& ctx) {
         ManifestWriter writer;
 
-        // Update package info
         auto& info = ctx.manifest->m_packageInfo;
         info.gameName = ctx.config.gameName;
         info.gameVersion = ctx.config.gameVersion;
@@ -510,7 +468,6 @@ namespace noty {
         info.createdBy = "NotY Repacker v1.0";
         info.creationDate = std::chrono::system_clock::now();
 
-        // Write manifest to file
         std::string manifestPath = (fs::path(ctx.outputDirectory) / noty::Constants::MANIFEST_FILENAME).string();
         if (!writer.writeToFilePretty(*ctx.manifest, manifestPath)) {
             m_lastError = "Failed to write manifest";
@@ -541,13 +498,11 @@ namespace noty {
         }
         catch (const std::exception& e) {
             Logger::instance().warning("Failed to copy cover image: " + std::string(e.what()));
-            return true; // Non-critical
+            return true;
         }
     }
 
     bool PackageBuilder::generateSetup(BuildContext& ctx) {
-        // This is a placeholder for setup.exe generation
-        // In Phase 6-7, this will be fully implemented
         Logger::instance().info("Setup.exe generation placeholder");
         m_setupPath = (fs::path(ctx.outputDirectory) / ctx.config.setupName).string();
         return true;
