@@ -111,17 +111,6 @@ namespace noty {
             return false;
         }
 
-        if (m_config.enableEncryption) {
-            if (m_config.encryptionKey.size() != 32) {
-                m_validationError = "Encryption key must be 32 bytes for AES-256";
-                return false;
-            }
-            if (m_config.encryptionNonce.size() != 12) {
-                m_validationError = "Encryption nonce must be 12 bytes for AES-GCM";
-                return false;
-            }
-        }
-
         m_validationError.clear();
         return true;
     }

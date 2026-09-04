@@ -32,10 +32,6 @@ namespace noty {
             bool createDesktopShortcut = false;
             bool createStartMenuShortcut = false;
             std::vector<std::string> selectedComponents;
-
-            bool enableEncryption = false;
-            std::vector<uint8_t> encryptionKey;
-            std::vector<uint8_t> encryptionNonce;
         };
 
         InstallJob();
@@ -100,7 +96,7 @@ namespace noty {
         std::atomic<int> m_progress;
         std::string m_status;
         std::string m_lastError;
-        std::string m_validationError;
+        mutable std::string m_validationError;
         std::atomic<bool> m_cancelled;
         std::chrono::steady_clock::time_point m_startTime;
         std::chrono::steady_clock::time_point m_endTime;

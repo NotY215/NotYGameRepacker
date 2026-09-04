@@ -38,9 +38,7 @@ namespace noty {
             int compressionLevel = 19;
             size_t compressionBufferSize = 1024 * 1024;
 
-            bool enableEncryption = true;
-            std::vector<uint8_t> encryptionKey;
-            std::vector<uint8_t> encryptionNonce;
+            bool enableEncryption = false;  // Default to false
 
             uint64_t maxChunkSize = 1024 * 1024 * 1024;
             uint32_t maxChunkCount = 0;
@@ -114,7 +112,7 @@ namespace noty {
         std::atomic<int> m_progress;
         std::string m_status;
         std::string m_lastError;
-        std::string m_validationError;
+        mutable std::string m_validationError;
         std::atomic<bool> m_cancelled;
         std::chrono::steady_clock::time_point m_startTime;
         std::chrono::steady_clock::time_point m_endTime;

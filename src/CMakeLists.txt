@@ -25,11 +25,6 @@ add_library(NotYCore STATIC
     compression/ZstdCompressor.cpp
     compression/ZstdDecompressor.cpp
     
-    # Crypto - Phase 4
-    crypto/Encryptor.cpp
-    crypto/Decryptor.cpp
-    crypto/KeyManager.cpp
-    
     # Repacker - Phase 5
     repacker/RepackJob.cpp
     repacker/RepackEngine.cpp
@@ -56,16 +51,15 @@ target_include_directories(NotYCore
         ${CMAKE_BINARY_DIR}/generated
 )
 
-# Link dependencies using targets
+# Link dependencies
 target_link_libraries(NotYCore
     PUBLIC
         Qt6::Core
         Qt6::Widgets
     PRIVATE
         nlohmann_json::nlohmann_json
-        zstd::libzstd
         BLAKE3::blake3
-        bcrypt
+        ${ZSTD_LIBRARIES}
         advapi32
         psapi
 )
@@ -78,6 +72,8 @@ target_include_directories(NotYCore
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
+        ${ZSTD_INCLUDE_DIRS}
+        ${BLAKE3_INCLUDE_DIRS}
 )
 
 # Add compiler options for the library

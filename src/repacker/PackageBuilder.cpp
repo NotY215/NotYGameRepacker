@@ -3,8 +3,6 @@
 #include "noty/common/Constants.h"
 #include "noty/filesystem/DirectoryScanner.h"
 #include "noty/compression/ZstdCompressor.h"
-#include "noty/crypto/Encryptor.h"
-#include "noty/crypto/KeyManager.h"
 #include "noty/hashing/Hasher.h"
 #include "noty/package/ManifestWriter.h"
 #include <filesystem>
@@ -23,21 +21,16 @@ namespace noty {
         , m_processedFileCount(0)
     {
         m_compressor = std::make_unique<ZstdCompressor>(19, 1024 * 1024);
-        m_encryptor = std::make_unique<Encryptor>(1024 * 1024);
-        m_keyManager = std::make_unique<KeyManager>();
         m_hasher = std::make_unique<Hasher>(Hasher::Algorithm::BLAKE3);
 
         m_fileBuffer.resize(1024 * 1024);
         m_compressedBuffer.resize(1024 * 1024 * 2);
-        m_encryptedBuffer.resize(1024 * 1024 * 2);
     }
 
     PackageBuilder::~PackageBuilder() = default;
 
     PackageBuilder::PackageBuilder(PackageBuilder&& other) noexcept
         : m_compressor(std::move(other.m_compressor))
-        , m_encryptor(std::move(other.m_encryptor))
-        , m_keyManager(std::move(other.m_keyManager))
         , m_hasher(std::move(other.m_hasher))
         , m_cancelled(other.m_cancelled.load())
         , m_lastError(std::move(other.m_lastError))
@@ -47,15 +40,12 @@ namespace noty {
         , m_chunkPaths(std::move(other.m_chunkPaths))
         , m_fileBuffer(std::move(other.m_fileBuffer))
         , m_compressedBuffer(std::move(other.m_compressedBuffer))
-        , m_encryptedBuffer(std::move(other.m_encryptedBuffer))
     {
     }
 
     PackageBuilder& PackageBuilder::operator=(PackageBuilder&& other) noexcept {
         if (this != &other) {
             m_compressor = std::move(other.m_compressor);
-            m_encryptor = std::move(other.m_encryptor);
-            m_keyManager = std::move(other.m_keyManager);
             m_hasher = std::move(other.m_hasher);
             m_cancelled.store(other.m_cancelled.load());
             m_lastError = std::move(other.m_lastError);
@@ -65,7 +55,6 @@ namespace noty {
             m_chunkPaths = std::move(other.m_chunkPaths);
             m_fileBuffer = std::move(other.m_fileBuffer);
             m_compressedBuffer = std::move(other.m_compressedBuffer);
-            m_encryptedBuffer = std::move(other.m_encryptedBuffer);
         }
         return *this;
     }
@@ -156,9 +145,6 @@ namespace noty {
         m_cancelled.store(true, std::memory_order_release);
         if (m_compressor) {
             m_compressor->cancel();
-        }
-        if (m_encryptor) {
-            m_encryptor->cancel();
         }
         Logger::instance().info("Package build cancellation requested");
     }
@@ -255,7 +241,7 @@ namespace noty {
             }
 
             std::vector<uint8_t> chunkData;
-            if (!compressAndEncryptFile(*it, ctx, entry, chunkData)) {
+            if (!compressFile(*it, ctx, entry, chunkData)) {
                 return false;
             }
 
@@ -292,7 +278,7 @@ namespace noty {
         return true;
     }
 
-    bool PackageBuilder::compressAndEncryptFile(const FileInfo& fileInfo,
+    bool PackageBuilder::compressFile(const FileInfo& fileInfo,
         BuildContext& ctx,
         FileEntry& entry,
         std::vector<uint8_t>& chunkData) {
@@ -321,37 +307,7 @@ namespace noty {
         }
 
         entry.compressedSize = compressedData.size();
-
-        if (ctx.config.enableEncryption) {
-            Encryptor fileEncryptor;
-
-            if (!fileEncryptor.initialize(
-                ctx.config.encryptionKey,
-                ctx.config.encryptionNonce,
-                {})) {
-                m_lastError = "Encryption initialization failed: " + fileEncryptor.getLastError();
-                Logger::instance().error(m_lastError);
-                return false;
-            }
-
-            ByteVector encryptedData;
-            ByteVector authTag;
-
-            if (!fileEncryptor.encryptBuffer(
-                compressedData.data(),
-                compressedData.size(),
-                encryptedData,
-                authTag)) {
-                m_lastError = "Encryption failed: " + fileEncryptor.getLastError();
-                Logger::instance().error(m_lastError);
-                return false;
-            }
-
-            chunkData = std::move(encryptedData);
-        }
-        else {
-            chunkData = std::move(compressedData);
-        }
+        chunkData = std::move(compressedData);
 
         m_totalProcessedSize += fileInfo.size;
         m_processedFileCount++;
@@ -409,7 +365,7 @@ namespace noty {
             const char* compression = "ZSTD";
             fullChunkData.insert(fullChunkData.end(), compression, compression + 4);
 
-            const char* encryption = ctx.config.enableEncryption ? "AES-GCM" : "NONE";
+            const char* encryption = "NONE";
             fullChunkData.insert(fullChunkData.end(), encryption, encryption + 4);
 
             uint64_t uncompressedSize = chunk.uncompressedSize;
@@ -462,7 +418,7 @@ namespace noty {
         info.compressedSize = ctx.manifest->calculateTotalCompressedSize();
         info.compressionRatio = (info.compressedSize * 100) / std::max(info.originalSize, (uint64_t)1);
         info.compressionMethod = "Zstandard";
-        info.encryptionMethod = ctx.config.enableEncryption ? "AES-256-GCM" : "None";
+        info.encryptionMethod = "None";
         info.hashAlgorithm = "BLAKE3";
         info.formatVersion = 1;
         info.createdBy = "NotY Repacker v1.0";

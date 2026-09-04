@@ -120,17 +120,6 @@ namespace noty {
             return false;
         }
 
-        if (m_config.enableEncryption) {
-            if (m_config.encryptionKey.size() != 32) {
-                m_validationError = "Encryption key must be 32 bytes for AES-256";
-                return false;
-            }
-            if (m_config.encryptionNonce.size() != 12) {
-                m_validationError = "Encryption nonce must be 12 bytes for AES-GCM";
-                return false;
-            }
-        }
-
         if (m_config.compressionLevel < 1 || m_config.compressionLevel > 22) {
             m_validationError = "Compression level must be between 1 and 22";
             return false;

@@ -2,7 +2,6 @@
 #include "noty/common/Logger.h"
 #include "noty/common/Constants.h"
 #include "noty/compression/ZstdDecompressor.h"
-#include "noty/crypto/Decryptor.h"
 #include "noty/hashing/Hasher.h"
 #include "noty/package/ManifestReader.h"
 #include <filesystem>
@@ -20,19 +19,16 @@ namespace noty {
         , m_extractedFileCount(0)
     {
         m_decompressor = std::make_unique<ZstdDecompressor>(1024 * 1024);
-        m_decryptor = std::make_unique<Decryptor>(1024 * 1024);
         m_hasher = std::make_unique<Hasher>(Hasher::Algorithm::BLAKE3);
 
         m_fileBuffer.resize(1024 * 1024);
         m_decompressedBuffer.resize(1024 * 1024 * 2);
-        m_decryptedBuffer.resize(1024 * 1024 * 2);
     }
 
     ExtractionEngine::~ExtractionEngine() = default;
 
     ExtractionEngine::ExtractionEngine(ExtractionEngine&& other) noexcept
         : m_decompressor(std::move(other.m_decompressor))
-        , m_decryptor(std::move(other.m_decryptor))
         , m_hasher(std::move(other.m_hasher))
         , m_cancelled(other.m_cancelled.load())
         , m_lastError(std::move(other.m_lastError))
@@ -40,14 +36,12 @@ namespace noty {
         , m_extractedFileCount(other.m_extractedFileCount)
         , m_fileBuffer(std::move(other.m_fileBuffer))
         , m_decompressedBuffer(std::move(other.m_decompressedBuffer))
-        , m_decryptedBuffer(std::move(other.m_decryptedBuffer))
     {
     }
 
     ExtractionEngine& ExtractionEngine::operator=(ExtractionEngine&& other) noexcept {
         if (this != &other) {
             m_decompressor = std::move(other.m_decompressor);
-            m_decryptor = std::move(other.m_decryptor);
             m_hasher = std::move(other.m_hasher);
             m_cancelled.store(other.m_cancelled.load());
             m_lastError = std::move(other.m_lastError);
@@ -55,7 +49,6 @@ namespace noty {
             m_extractedFileCount = other.m_extractedFileCount;
             m_fileBuffer = std::move(other.m_fileBuffer);
             m_decompressedBuffer = std::move(other.m_decompressedBuffer);
-            m_decryptedBuffer = std::move(other.m_decryptedBuffer);
         }
         return *this;
     }
@@ -128,9 +121,6 @@ namespace noty {
         m_cancelled.store(true, std::memory_order_release);
         if (m_decompressor) {
             m_decompressor->cancel();
-        }
-        if (m_decryptor) {
-            m_decryptor->cancel();
         }
         Logger::instance().info("Extraction cancellation requested");
     }
@@ -260,26 +250,6 @@ namespace noty {
         Logger::instance().info("Manifest loaded: " + std::to_string(ctx.fileCount) +
             " files, " + std::to_string(ctx.totalSize) + " bytes");
 
-        if (ctx.config.enableEncryption) {
-            if (ctx.config.encryptionKey.empty() || ctx.config.encryptionNonce.empty()) {
-                m_lastError = "Encryption enabled but key or nonce missing";
-                Logger::instance().error(m_lastError);
-                return false;
-            }
-
-            std::vector<uint8_t> dummyAuthTag(16, 0);
-
-            if (!m_decryptor->initialize(
-                ctx.config.encryptionKey,
-                ctx.config.encryptionNonce,
-                dummyAuthTag,
-                {})) {
-                m_lastError = "Failed to initialize decryptor: " + m_decryptor->getLastError();
-                Logger::instance().error(m_lastError);
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -394,7 +364,6 @@ namespace noty {
         const FileEntry& entry,
         const std::vector<uint8_t>& chunkData) {
         std::vector<uint8_t> decompressedData;
-        std::vector<uint8_t> decryptedData;
 
         if (!m_decompressor->decompressBuffer(
             chunkData.data(),
@@ -403,10 +372,6 @@ namespace noty {
             m_lastError = "Decompression failed: " + m_decompressor->getLastError();
             Logger::instance().error(m_lastError);
             return false;
-        }
-
-        if (ctx.config.enableEncryption) {
-            // Decrypt would go here in production
         }
 
         fs::path outputPath = fs::path(ctx.installDirectory) / entry.path;
@@ -435,14 +400,6 @@ namespace noty {
 
     bool ExtractionEngine::verifyExtractedFiles(ExtractionContext& ctx) {
         return verifyExtraction(*ctx.manifest, ctx.installDirectory);
-    }
-
-    bool ExtractionEngine::decompressAndDecryptFile(const std::vector<uint8_t>& encryptedData,
-        const FileEntry& entry,
-        std::vector<uint8_t>& outputData,
-        ExtractionContext& ctx) {
-        outputData = encryptedData;
-        return true;
     }
 
     void ExtractionEngine::updateProgress(ExtractionContext& ctx, int percent, const std::string& status) {
