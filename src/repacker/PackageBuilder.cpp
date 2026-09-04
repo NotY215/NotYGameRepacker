@@ -206,7 +206,7 @@ namespace noty {
             ctx.manifest->addFile(entry);
 
             processed++;
-            int percent = 15 + (processed * 10 / totalFiles);
+            int percent = 15 + static_cast<int>((processed * 10) / totalFiles);
             updateFileProgress(ctx, fileInfo.relativePath, percent);
         }
 
@@ -241,7 +241,7 @@ namespace noty {
             }
 
             std::vector<uint8_t> chunkData;
-            if (!compressFile(*it, ctx, entry, chunkData)) {
+            if (!compressAndPackFile(*it, ctx, entry, chunkData)) {
                 return false;
             }
 
@@ -257,7 +257,7 @@ namespace noty {
             }
 
             processed++;
-            int percent = 25 + (processed * 50 / totalFiles);
+            int percent = 25 + static_cast<int>((processed * 50) / totalFiles);
             updateProgress(ctx, percent, "Processing: " + entry.path);
             updateFileProgress(ctx, entry.path, percent);
         }
@@ -278,7 +278,7 @@ namespace noty {
         return true;
     }
 
-    bool PackageBuilder::compressFile(const FileInfo& fileInfo,
+    bool PackageBuilder::compressAndPackFile(const FileInfo& fileInfo,
         BuildContext& ctx,
         FileEntry& entry,
         std::vector<uint8_t>& chunkData) {
@@ -327,7 +327,7 @@ namespace noty {
         while (chunkNum.length() < 3) {
             chunkNum = "0" + chunkNum;
         }
-        chunk.filename = ctx.config.gameName + "." + chunkNum + noty::Constants::PACKAGE_EXTENSION;
+        chunk.filename = ctx.config.gameName + "." + chunkNum + std::string(noty::Constants::PACKAGE_EXTENSION);
         chunk.uncompressedSize = ctx.currentChunkData.size();
         chunk.compressedSize = chunk.uncompressedSize;
         chunk.fileCount = 0;
@@ -397,7 +397,7 @@ namespace noty {
             m_chunkPaths.push_back(chunkPath);
             chunkIndex++;
 
-            int percent = 75 + (chunkIndex * 10 / ctx.chunks.size());
+            int percent = 75 + static_cast<int>((chunkIndex * 10) / ctx.chunks.size());
             updateProgress(ctx, percent, "Writing chunk " +
                 std::to_string(chunk.id) + "/" + std::to_string(ctx.chunks.size()));
         }
@@ -424,7 +424,7 @@ namespace noty {
         info.createdBy = "NotY Repacker v1.0";
         info.creationDate = std::chrono::system_clock::now();
 
-        std::string manifestPath = (fs::path(ctx.outputDirectory) / noty::Constants::MANIFEST_FILENAME).string();
+        std::string manifestPath = (fs::path(ctx.outputDirectory) / std::string(noty::Constants::MANIFEST_FILENAME)).string();
         if (!writer.writeToFilePretty(*ctx.manifest, manifestPath)) {
             m_lastError = "Failed to write manifest";
             Logger::instance().error(m_lastError);
@@ -447,7 +447,7 @@ namespace noty {
         }
 
         try {
-            std::string coverPath = (fs::path(ctx.outputDirectory) / noty::Constants::COVER_FILENAME).string();
+            std::string coverPath = (fs::path(ctx.outputDirectory) / std::string(noty::Constants::COVER_FILENAME)).string();
             fs::copy_file(ctx.config.coverImagePath, coverPath, fs::copy_options::overwrite_existing);
             Logger::instance().info("Cover image copied to: " + coverPath);
             return true;

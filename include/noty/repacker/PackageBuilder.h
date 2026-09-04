@@ -13,8 +13,6 @@
 namespace noty {
 
     class ZstdCompressor;
-    class Encryptor;
-    class KeyManager;
 
     /**
      * @brief Builds .noty package files from source directories
@@ -120,7 +118,7 @@ namespace noty {
         bool generateSetup(BuildContext& ctx);
         bool writeCoverImage(BuildContext& ctx);
 
-        bool compressAndEncryptFile(const FileInfo& fileInfo,
+        bool compressAndPackFile(const FileInfo& fileInfo,
             BuildContext& ctx,
             FileEntry& entry,
             std::vector<uint8_t>& chunkData);
@@ -131,8 +129,6 @@ namespace noty {
         void updateFileProgress(BuildContext& ctx, const std::string& filename, int percent);
 
         std::unique_ptr<ZstdCompressor> m_compressor;
-        std::unique_ptr<Encryptor> m_encryptor;
-        std::unique_ptr<KeyManager> m_keyManager;
         std::unique_ptr<Hasher> m_hasher;
 
         std::atomic<bool> m_cancelled;
@@ -146,7 +142,6 @@ namespace noty {
         // Buffers for file operations
         std::vector<uint8_t> m_fileBuffer;
         std::vector<uint8_t> m_compressedBuffer;
-        std::vector<uint8_t> m_encryptedBuffer;
     };
 
 } // namespace noty

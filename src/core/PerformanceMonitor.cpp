@@ -52,14 +52,12 @@ namespace noty {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             now - m_lastUpdateTime).count();
 
-        // Update throughput every 500ms
         if (elapsed >= 500) {
             calculateThroughput();
             calculateETA();
             m_lastUpdateTime = now;
         }
 
-        // Update system metrics periodically
         static int updateCounter = 0;
         if (++updateCounter % 10 == 0) {
             updateSystemMetrics();
@@ -68,7 +66,7 @@ namespace noty {
 
     void PerformanceMonitor::updateTotalBytes(uint64_t totalBytes) {
         m_totalBytes = totalBytes;
-        calculateETA(); // Recalculate ETA with new total
+        calculateETA();
     }
 
     void PerformanceMonitor::stopOperation() {
@@ -112,10 +110,10 @@ namespace noty {
         metrics.elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             now - m_startTime).count();
 
-        // Calculate estimated total time
-        if (m_averageThroughput > 0 && m_totalBytes > 0) {
+        double avgThroughput = m_averageThroughput.load();
+        if (avgThroughput > 0 && m_totalBytes > 0) {
             metrics.estimatedTotalTime = static_cast<uint64_t>(
-                m_totalBytes / m_averageThroughput * 1000);
+                m_totalBytes / avgThroughput * 1000);
         }
         else {
             metrics.estimatedTotalTime = 0;
@@ -194,11 +192,6 @@ namespace noty {
             return;
         }
 
-        // Calculate current throughput
-        uint64_t bytesDelta = m_bytesProcessed - (m_bytesProcessed -
-            (m_bytesProcessed > 0 ? m_bytesProcessed : 0));
-
-        // We need to track bytes at last update
         static uint64_t lastBytes = 0;
         uint64_t delta = m_bytesProcessed - lastBytes;
         lastBytes = m_bytesProcessed;
@@ -206,13 +199,11 @@ namespace noty {
         uint64_t throughput = static_cast<uint64_t>((double)delta / (elapsed / 1000.0));
         m_currentThroughput = throughput;
 
-        // Store sample for average
         m_throughputSamples.push_back({ delta, static_cast<uint64_t>(elapsed) });
         if (m_throughputSamples.size() > MAX_SAMPLES) {
             m_throughputSamples.erase(m_throughputSamples.begin());
         }
 
-        // Calculate average throughput
         uint64_t totalBytes = 0;
         uint64_t totalTime = 0;
         for (const auto& sample : m_throughputSamples) {
@@ -238,7 +229,6 @@ namespace noty {
         uint64_t etaMs = static_cast<uint64_t>(remaining / avgThroughput * 1000);
         m_estimatedTimeRemaining = etaMs;
 
-        // Check if ETA is stable (based on sample count)
         m_etaStable.store(m_throughputSamples.size() >= 5, std::memory_order_release);
     }
 
@@ -249,7 +239,6 @@ namespace noty {
             uint64_t memory = pmc.WorkingSetSize;
             m_memoryUsage = memory;
 
-            // Update peak memory
             uint64_t currentPeak = m_peakMemoryUsage.load();
             if (memory > currentPeak) {
                 m_peakMemoryUsage = memory;
@@ -258,7 +247,6 @@ namespace noty {
     }
 
     void PerformanceMonitor::updateCpuUsage() {
-        // Simple CPU usage using system times
         FILETIME idleTime, kernelTime, userTime;
         if (GetSystemTimes(&idleTime, &kernelTime, &userTime)) {
             static uint64_t lastIdle = 0, lastKernel = 0, lastUser = 0;

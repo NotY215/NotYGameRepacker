@@ -18,15 +18,12 @@ namespace noty {
 
         detectSystemResources();
 
-        // Copy provided config
         m_config = config;
 
-        // Auto-detect if not explicitly set
         if (m_config.adaptiveBuffers) {
             calculateBufferSizes();
         }
         else {
-            // Use provided sizes or fallback to defaults
             if (m_config.compressionBufferSize == 0) m_config.compressionBufferSize = 1024 * 1024;
             if (m_config.decompressionBufferSize == 0) m_config.decompressionBufferSize = 1024 * 1024;
             if (m_config.encryptionBufferSize == 0) m_config.encryptionBufferSize = 1024 * 1024;
@@ -42,14 +39,14 @@ namespace noty {
             if (m_config.threadPoolSize == 0) m_config.threadPoolSize = 4;
         }
 
-        // Determine profile based on detected memory
-        if (m_totalMemory < 8ULL * 1024 * 1024 * 1024) {
+        const unsigned long long ONE_GB = 1024ULL * 1024 * 1024;
+        if (m_totalMemory < 8ULL * ONE_GB) {
             m_config.profile = MemoryProfile::Conservative;
         }
-        else if (m_totalMemory < 16ULL * 1024 * 1024 * 1024) {
+        else if (m_totalMemory < 16ULL * ONE_GB) {
             m_config.profile = MemoryProfile::Moderate;
         }
-        else if (m_totalMemory < 32ULL * 1024 * 1024 * 1024) {
+        else if (m_totalMemory < 32ULL * ONE_GB) {
             m_config.profile = MemoryProfile::High;
         }
         else {
@@ -65,18 +62,16 @@ namespace noty {
     }
 
     void ResourceManager::detectSystemResources() {
-        // Get system memory
         MEMORYSTATUSEX memStatus;
         memStatus.dwLength = sizeof(memStatus);
         if (GlobalMemoryStatusEx(&memStatus)) {
             m_totalMemory = memStatus.ullTotalPhys;
         }
         else {
-            m_totalMemory = 8ULL * 1024 * 1024 * 1024; // Fallback to 8GB
+            m_totalMemory = 8ULL * 1024 * 1024 * 1024;
             Logger::instance().warning("Failed to detect system memory, using default: 8GB");
         }
 
-        // Get CPU cores
         m_cpuCores = std::thread::hardware_concurrency();
         if (m_cpuCores == 0) {
             m_cpuCores = 4;
@@ -85,66 +80,59 @@ namespace noty {
     }
 
     void ResourceManager::calculateBufferSizes() {
-        const uint64_t GB = 1024ULL * 1024 * 1024;
-        const uint64_t MB = 1024ULL * 1024;
+        const unsigned long long GB = 1024ULL * 1024 * 1024;
+        const unsigned long long MB = 1024ULL * 1024;
 
-        if (m_totalMemory < 8 * GB) {
-            // Conservative: < 8GB
-            m_config.compressionBufferSize = 512 * 1024;      // 512KB
-            m_config.decompressionBufferSize = 512 * 1024;    // 512KB
-            m_config.encryptionBufferSize = 512 * 1024;       // 512KB
-            m_config.fileBufferSize = 512 * 1024;             // 512KB
-            m_config.chunkBufferSize = 5 * MB;                // 5MB
+        if (m_totalMemory < 8ULL * GB) {
+            m_config.compressionBufferSize = 512 * 1024;
+            m_config.decompressionBufferSize = 512 * 1024;
+            m_config.encryptionBufferSize = 512 * 1024;
+            m_config.fileBufferSize = 512 * 1024;
+            m_config.chunkBufferSize = 5ULL * MB;
         }
-        else if (m_totalMemory < 16 * GB) {
-            // Moderate: 8-16GB
-            m_config.compressionBufferSize = 1 * MB;          // 1MB
-            m_config.decompressionBufferSize = 1 * MB;        // 1MB
-            m_config.encryptionBufferSize = 1 * MB;           // 1MB
-            m_config.fileBufferSize = 1 * MB;                 // 1MB
-            m_config.chunkBufferSize = 10 * MB;               // 10MB
+        else if (m_totalMemory < 16ULL * GB) {
+            m_config.compressionBufferSize = 1ULL * MB;
+            m_config.decompressionBufferSize = 1ULL * MB;
+            m_config.encryptionBufferSize = 1ULL * MB;
+            m_config.fileBufferSize = 1ULL * MB;
+            m_config.chunkBufferSize = 10ULL * MB;
         }
-        else if (m_totalMemory < 32 * GB) {
-            // High: 16-32GB
-            m_config.compressionBufferSize = 2 * MB;          // 2MB
-            m_config.decompressionBufferSize = 2 * MB;        // 2MB
-            m_config.encryptionBufferSize = 2 * MB;           // 2MB
-            m_config.fileBufferSize = 2 * MB;                 // 2MB
-            m_config.chunkBufferSize = 25 * MB;               // 25MB
+        else if (m_totalMemory < 32ULL * GB) {
+            m_config.compressionBufferSize = 2ULL * MB;
+            m_config.decompressionBufferSize = 2ULL * MB;
+            m_config.encryptionBufferSize = 2ULL * MB;
+            m_config.fileBufferSize = 2ULL * MB;
+            m_config.chunkBufferSize = 25ULL * MB;
         }
         else {
-            // Aggressive: 32+GB
-            m_config.compressionBufferSize = 4 * MB;          // 4MB
-            m_config.decompressionBufferSize = 4 * MB;        // 4MB
-            m_config.encryptionBufferSize = 4 * MB;           // 4MB
-            m_config.fileBufferSize = 4 * MB;                 // 4MB
-            m_config.chunkBufferSize = 50 * MB;               // 50MB
+            m_config.compressionBufferSize = 4ULL * MB;
+            m_config.decompressionBufferSize = 4ULL * MB;
+            m_config.encryptionBufferSize = 4ULL * MB;
+            m_config.fileBufferSize = 4ULL * MB;
+            m_config.chunkBufferSize = 50ULL * MB;
         }
 
-        // Cap buffer sizes to prevent excessive memory usage
-        const size_t MAX_BUFFER_SIZE = 16 * MB;
+        const size_t MAX_BUFFER_SIZE = 16ULL * MB;
         m_config.compressionBufferSize = std::min(m_config.compressionBufferSize, MAX_BUFFER_SIZE);
         m_config.decompressionBufferSize = std::min(m_config.decompressionBufferSize, MAX_BUFFER_SIZE);
         m_config.encryptionBufferSize = std::min(m_config.encryptionBufferSize, MAX_BUFFER_SIZE);
         m_config.fileBufferSize = std::min(m_config.fileBufferSize, MAX_BUFFER_SIZE);
-        m_config.chunkBufferSize = std::min(m_config.chunkBufferSize, 100 * MB);
+        m_config.chunkBufferSize = std::min(m_config.chunkBufferSize, 100ULL * MB);
     }
 
     void ResourceManager::calculateThreadPoolSize() {
-        if (m_totalMemory < 8 * 1024 * 1024 * 1024) {
-            // Conservative: Use fewer threads to save memory
+        const unsigned long long GB = 1024ULL * 1024 * 1024;
+
+        if (m_totalMemory < 8ULL * GB) {
             m_config.threadPoolSize = std::max(2u, m_cpuCores / 2);
         }
-        else if (m_totalMemory < 16 * 1024 * 1024 * 1024) {
-            // Moderate: Use most cores
+        else if (m_totalMemory < 16ULL * GB) {
             m_config.threadPoolSize = std::max(2u, m_cpuCores - 1);
         }
         else {
-            // High/Aggressive: Use all cores
             m_config.threadPoolSize = m_cpuCores;
         }
 
-        // Ensure at least 2 threads for I/O overlap
         if (m_config.threadPoolSize < 2) {
             m_config.threadPoolSize = 2;
         }
@@ -156,17 +144,16 @@ namespace noty {
         if (GlobalMemoryStatusEx(&memStatus)) {
             return memStatus.ullAvailPhys;
         }
-        return m_totalMemory / 2; // Fallback
+        return m_totalMemory / 2;
     }
 
     bool ResourceManager::isMemoryConstrained() const {
         uint64_t available = getAvailableMemory();
         uint64_t total = m_totalMemory;
-        return (available < total / 4); // Less than 25% available
+        return (available < total / 4);
     }
 
     void ResourceManager::updateConfig() {
-        // Re-detect and recalculate
         detectSystemResources();
         calculateBufferSizes();
         calculateThreadPoolSize();
@@ -190,21 +177,18 @@ namespace noty {
     }
 
     uint64_t ResourceManager::calculateOptimalChunkSize(uint64_t requestedSize) const {
-        // Ensure chunk size doesn't exceed available memory / 4
         uint64_t maxSafeChunk = getAvailableMemory() / 4;
-        if (maxSafeChunk < 100 * 1024 * 1024) {
-            maxSafeChunk = 100 * 1024 * 1024; // Minimum 100MB
+        if (maxSafeChunk < 100ULL * 1024 * 1024) {
+            maxSafeChunk = 100ULL * 1024 * 1024;
         }
 
         uint64_t optimal = std::min(requestedSize, maxSafeChunk);
 
-        // Round to MB
         const uint64_t MB = 1024 * 1024;
         optimal = (optimal / MB) * MB;
 
-        // Ensure at least 100MB
-        if (optimal < 100 * MB) {
-            optimal = 100 * MB;
+        if (optimal < 100ULL * MB) {
+            optimal = 100ULL * MB;
         }
 
         return optimal;

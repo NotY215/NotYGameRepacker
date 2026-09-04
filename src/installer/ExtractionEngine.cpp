@@ -194,13 +194,13 @@ namespace noty {
 
             if (fs::is_directory(packageDir)) {
                 for (const auto& entry : fs::directory_iterator(packageDir)) {
-                    if (entry.is_regular_file() && entry.path().extension() == noty::Constants::PACKAGE_EXTENSION) {
+                    if (entry.is_regular_file() && entry.path().extension() == std::string(noty::Constants::PACKAGE_EXTENSION)) {
                         totalSize += fs::file_size(entry.path());
                     }
                 }
             }
             else if (fs::is_regular_file(packageDir) &&
-                packageDir.extension() == noty::Constants::PACKAGE_EXTENSION) {
+                packageDir.extension() == std::string(noty::Constants::PACKAGE_EXTENSION)) {
                 totalSize = fs::file_size(packageDir);
             }
         }
@@ -218,10 +218,10 @@ namespace noty {
         fs::path path(ctx.packagePath);
 
         if (fs::is_directory(path)) {
-            manifestPath = (path / noty::Constants::MANIFEST_FILENAME).string();
+            manifestPath = (path / std::string(noty::Constants::MANIFEST_FILENAME)).string();
         }
         else if (fs::is_regular_file(path)) {
-            manifestPath = (path.parent_path() / noty::Constants::MANIFEST_FILENAME).string();
+            manifestPath = (path.parent_path() / std::string(noty::Constants::MANIFEST_FILENAME)).string();
         }
         else {
             m_lastError = "Invalid package path: " + ctx.packagePath;
