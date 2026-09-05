@@ -860,9 +860,7 @@ void MainWindow::validateInputs()
     // Output directory
     if (!m_config.outputDirectory.isEmpty()) {
         QFileInfo info(m_config.outputDirectory);
-        // Directory doesn't need to exist yet, but path should be valid
         if (!QDir(m_config.outputDirectory).exists()) {
-            // Try to create it
             QDir dir;
             if (!dir.mkpath(m_config.outputDirectory)) {
                 valid = false;
@@ -882,7 +880,7 @@ void MainWindow::validateInputs()
     if (m_config.setupName.isEmpty() || !m_config.setupName.endsWith(".exe", Qt::CaseInsensitive)) {
         valid = false;
     }
-    bool valid = validateInputs();
+
     m_nextButton->setEnabled(valid && !m_isRepacking && !m_repackComplete);
 }
 
@@ -1046,12 +1044,6 @@ void MainWindow::startRepacking()
 
     connect(thread, &QThread::finished, engine, &QObject::deleteLater);
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-
-    // Monitor engine for completion
-    connect(engine, &noty::RepackEngine::destroyed, [this]() {
-        // Check if repack was successful
-        onRepackComplete(true, "Repack completed successfully!");
-        });
 
     // Store engine pointer for cancellation
     // In a real implementation, we'd store this in a member

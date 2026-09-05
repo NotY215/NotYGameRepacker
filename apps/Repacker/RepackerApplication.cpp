@@ -5,7 +5,6 @@
 #include "noty/core/PerformanceMonitor.h"
 #include "noty/repacker/RepackEngine.h"
 #include "noty/repacker/RepackJob.h"
-#include "noty/crypto/KeyManager.h"
 #include <QMessageBox>
 #include <QThread>
 

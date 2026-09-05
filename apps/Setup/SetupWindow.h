@@ -127,19 +127,3 @@ private:
     QString m_repackerName;
     uint64_t m_packageSize = 0;
 };
-
-// Inline implementations
-inline QString SetupWindow::getInstallDirectory() const
-{
-    return m_installDirEdit ? m_installDirEdit->text() : QString();
-}
-
-inline bool SetupWindow::shouldCreateDesktopShortcut() const
-{
-    return false; // Default
-}
-
-inline bool SetupWindow::shouldCreateStartMenuShortcut() const
-{
-    return false; // Default
-}

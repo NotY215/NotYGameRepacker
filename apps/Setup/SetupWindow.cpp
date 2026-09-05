@@ -36,7 +36,7 @@ SetupWindow::SetupWindow(QWidget * parent)
     loadFonts();
     setupUi();
     showWelcomePage();
-    noty::Logger::instance().info("SetupWindow initialized (Phase 9).");
+    noty::Logger::instance().info("SetupWindow initialized.");
 }
 
 SetupWindow::~SetupWindow() = default;
@@ -167,6 +167,7 @@ void SetupWindow::setupWelcomePage()
     gameNameLabel->setFont(gameFont);
     gameNameLabel->setStyleSheet("color: #4CAF50;");
     layout->addWidget(gameNameLabel);
+    gameNameLabel->setObjectName("gameNameLabel");
 
     // Repacker info
     auto* repackerLabel = new QLabel(
@@ -175,6 +176,7 @@ void SetupWindow::setupWelcomePage()
     repackerLabel->setAlignment(Qt::AlignCenter);
     repackerLabel->setStyleSheet("color: #888888; font-size: 12px; font-family: Rubik;");
     layout->addWidget(repackerLabel);
+    repackerLabel->setObjectName("repackerLabel");
 
     layout->addSpacing(20);
 
@@ -389,6 +391,7 @@ void SetupWindow::setupVerificationPage()
     status->setWordWrap(true);
     status->setStyleSheet("color: #aaaaaa; font-family: Rubik;");
     layout->addWidget(status);
+    status->setObjectName("statusLabel");
 
     layout->addStretch();
 
@@ -438,6 +441,7 @@ void SetupWindow::setupFinishPage()
     details->setWordWrap(true);
     details->setStyleSheet("color: #aaaaaa; font-family: Rubik;");
     layout->addWidget(details);
+    details->setObjectName("detailsLabel");
 
     layout->addSpacing(20);
 
@@ -633,8 +637,7 @@ void SetupWindow::updateComponentsList()
     // Clear existing items
     m_componentsList->clear();
 
-    // Add components from manifest
-    // For now, add some example components
+    // Add components
     QList<QListWidgetItem*> items;
 
     auto* item1 = new QListWidgetItem("Game Files (Required)");
@@ -656,7 +659,6 @@ void SetupWindow::updateComponentsList()
 void SetupWindow::updateComponentSizes()
 {
     // Calculate and display total size of selected components
-    // For now, just show the package size
     QString sizeStr;
     if (m_packageSize > 1024 * 1024 * 1024) {
         sizeStr = QString("%1 GB").arg(m_packageSize / (1024.0 * 1024.0 * 1024.0), 0, 'f', 2);
@@ -724,7 +726,6 @@ void SetupWindow::onContinueClicked()
 
         QFileInfo dirInfo(installDir);
         if (!dirInfo.exists()) {
-            // Directory doesn't exist, will be created
             QDir dir;
             if (!dir.mkpath(installDir)) {
                 QMessageBox::warning(this, "Invalid Location",
@@ -750,13 +751,11 @@ void SetupWindow::onContinueClicked()
     }
 
     if (m_currentPage == ComponentsPage) {
-        // Collect selected components
         showInstallPage();
         return;
     }
 
     if (m_currentPage == InstallPage) {
-        // Should not happen - Install button should be used
         return;
     }
 
@@ -787,7 +786,6 @@ void SetupWindow::onBackClicked()
 void SetupWindow::onCancelClicked()
 {
     if (m_isInstalling) {
-        // Cancel installation
         int reply = QMessageBox::question(this, "Cancel Installation",
             "Are you sure you want to cancel the installation?",
             QMessageBox::Yes | QMessageBox::No);
@@ -856,7 +854,6 @@ void SetupWindow::onFinishClicked()
             QDesktopServices::openUrl(QUrl::fromLocalFile(gameExe));
         }
         else {
-            // Try alternative locations
             QStringList alternatives;
             alternatives << "/Game.exe" << "/Launcher.exe" << "/" + m_gameName + ".exe";
             for (const QString& alt : alternatives) {
@@ -874,7 +871,6 @@ void SetupWindow::onFinishClicked()
 
 void SetupWindow::onComponentSelectionChanged()
 {
-    // Calculate size of selected components
     updateComponentSizes();
 }
 
@@ -888,15 +884,14 @@ void SetupWindow::setInstallationComplete(bool success, const QString & message)
         m_completeIcon->setStyleSheet("color: #4CAF50; font-size: 64px; font-family: Rubik;");
         m_completeMessage->setStyleSheet("color: #ffffff; font-size: 24px; font-weight: 700; font-family: Rubik;");
 
-        // Update completion message
         QLabel* details = m_finishPage->findChild<QLabel*>("detailsLabel");
         if (details) {
             details->setText("The game has been successfully installed.\n"
                 "You can now launch the game from the Start Menu or desktop shortcut.");
         }
+        m_launchCheckbox->setVisible(true);
     }
     else {
-        // Show error
         m_completeMessage->setText("Installation Failed");
         m_completeIcon->setStyleSheet("color: #dc3545; font-size: 64px; font-family: Rubik;");
         m_completeMessage->setStyleSheet("color: #dc3545; font-size: 24px; font-weight: 700; font-family: Rubik;");
@@ -913,4 +908,20 @@ void SetupWindow::setInstallationComplete(bool success, const QString & message)
     }
 
     updateNavigationButtons();
+}
+
+// Inline implementations
+QString SetupWindow::getInstallDirectory() const
+{
+    return m_installDirEdit ? m_installDirEdit->text() : QString();
+}
+
+bool SetupWindow::shouldCreateDesktopShortcut() const
+{
+    return false;
+}
+
+bool SetupWindow::shouldCreateStartMenuShortcut() const
+{
+    return false;
 }

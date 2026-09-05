@@ -18,8 +18,12 @@ include(CompilerOptions)
 include(Dependencies)
 include(QtDeployment)
 
-# Find Qt6
+# Find Qt6 tools
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
+find_package(Qt6Tools REQUIRED)
+
+# Resource file (includes fonts and icons)
+qt6_add_resources(RESOURCES resources/resources.qrc)
 
 # Find Zstd - use CONFIG mode with REQUIRED
 find_package(zstd CONFIG REQUIRED)
