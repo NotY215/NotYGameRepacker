@@ -47,13 +47,19 @@ public:
         QString coverImagePath;
         int compressionLevel = 19;
         uint64_t chunkSize = 1024 * 1024 * 1024; // 1GB
-        bool enableEncryption = true;
+        bool enableEncryption = false;
         bool includeHiddenFiles = false;
         bool generateSetup = true;
         std::vector<std::string> components;
     };
 
     const PackageConfig& getConfig() const { return m_config; }
+    uint64_t getTotalSize() const { return m_totalSize; }
+    uint64_t getFileCount() const { return m_fileCount; }
+
+signals:
+    void repackStarted(const PackageConfig& config);
+    void repackCancelled();
 
 private slots:
     void onContinueClicked();

@@ -3,7 +3,6 @@
 #include <memory>
 
 class MainWindow;
-struct MainWindow;
 
 namespace noty {
     class RepackEngine;
@@ -22,6 +21,14 @@ public:
     void startRepack(const MainWindow::PackageConfig& config);
     void cancelRepack();
     bool isRepacking() const;
+
+signals:
+    void repackStarted(const MainWindow::PackageConfig& config);
+    void repackCancelled();
+
+private slots:
+    void onRepackStarted(const MainWindow::PackageConfig& config);
+    void onRepackCancelled();
 
 private:
     std::unique_ptr<MainWindow> m_mainWindow;

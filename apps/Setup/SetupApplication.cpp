@@ -11,6 +11,7 @@
 #include <QThread>
 #include <QDir>
 #include <filesystem>
+#include <QCoreApplication>
 
 namespace fs = std::filesystem;
 

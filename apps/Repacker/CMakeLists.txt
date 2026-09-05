@@ -4,6 +4,7 @@ add_executable(NotYRepacker
     RepackerApplication.h
     MainWindow.cpp
     MainWindow.h
+    ${RESOURCES}
 )
 
 target_link_libraries(NotYRepacker
@@ -13,9 +14,6 @@ target_link_libraries(NotYRepacker
         Qt6::Widgets
         Qt6::Gui
 )
-
-# Include the resource file (defined in root)
-target_sources(NotYRepacker PRIVATE ${RESOURCES})
 
 # Set properties for Windows
 if(WIN32)

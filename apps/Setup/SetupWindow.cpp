@@ -202,7 +202,7 @@ void SetupWindow::setupLocationPage()
 
     // Title
     auto* title = new QLabel("Installation Location", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, QFont::DemiBold);
     title->setFont(titleFont);
     title->setStyleSheet("color: #ffffff;");
     layout->addWidget(title);
@@ -269,7 +269,7 @@ void SetupWindow::setupComponentsPage()
 
     // Title
     auto* title = new QLabel("Select Components", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, QFont::DemiBold);
     title->setFont(titleFont);
     title->setStyleSheet("color: #ffffff;");
     layout->addWidget(title);
@@ -314,7 +314,7 @@ void SetupWindow::setupInstallPage()
 
     // Title
     auto* title = new QLabel("Installing...", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, QFont::DemiBold);
     title->setFont(titleFont);
     title->setStyleSheet("color: #ffffff;");
     layout->addWidget(title);
@@ -378,7 +378,7 @@ void SetupWindow::setupVerificationPage()
     // Title
     auto* title = new QLabel("Verifying Installation...", this);
     title->setAlignment(Qt::AlignCenter);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, QFont::DemiBold);
     title->setFont(titleFont);
     title->setStyleSheet("color: #ffffff;");
     layout->addWidget(title);

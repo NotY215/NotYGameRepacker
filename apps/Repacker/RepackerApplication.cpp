@@ -4,6 +4,7 @@
 #include "noty/core/ResourceManager.h"
 #include "noty/core/PerformanceMonitor.h"
 #include <QMessageBox>
+#include <QThread>
 
 RepackerApplication::RepackerApplication(QObject * parent)
     : QObject(parent)
@@ -95,13 +96,6 @@ void RepackerApplication::onRepackStarted(const MainWindow::PackageConfig& confi
         jobConfig.coverImagePath = config.coverImagePath.toStdString();
         jobConfig.hashAlgorithm = "BLAKE3";
 
-        // Generate encryption key if enabled
-        if (config.enableEncryption) {
-            noty::KeyManager keyManager;
-            jobConfig.encryptionKey = keyManager.generateKey();
-            jobConfig.encryptionNonce = keyManager.generateNonce();
-        }
-
         noty::RepackJob job(jobConfig);
         m_repackEngine->startJob(std::move(job));
         });
@@ -124,6 +118,16 @@ void RepackerApplication::onRepackCancelled()
         noty::Logger::instance().info("Repack cancellation requested");
         noty::PerformanceMonitor::instance().stopOperation();
     }
+}
+
+void RepackerApplication::startRepack(const MainWindow::PackageConfig& config)
+{
+    emit repackStarted(config);
+}
+
+void RepackerApplication::cancelRepack()
+{
+    emit repackCancelled();
 }
 
 bool RepackerApplication::isRepacking() const

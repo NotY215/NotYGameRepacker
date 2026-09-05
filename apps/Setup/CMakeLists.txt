@@ -4,6 +4,7 @@ add_executable(NotYSetup
     SetupApplication.h
     SetupWindow.cpp
     SetupWindow.h
+    ${RESOURCES}
 )
 
 target_link_libraries(NotYSetup
@@ -13,9 +14,6 @@ target_link_libraries(NotYSetup
         Qt6::Widgets
         Qt6::Gui
 )
-
-# Include the resource file (defined in root)
-target_sources(NotYSetup PRIVATE ${RESOURCES})
 
 # Set properties for Windows
 if(WIN32)

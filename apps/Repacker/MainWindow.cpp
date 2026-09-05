@@ -4,7 +4,6 @@
 #include "noty/filesystem/DirectoryScanner.h"
 #include "noty/repacker/RepackEngine.h"
 #include "noty/repacker/RepackJob.h"
-#include "noty/crypto/KeyManager.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -1029,13 +1028,6 @@ void MainWindow::startRepacking()
     jobConfig.generateSetup = m_config.generateSetup;
     jobConfig.coverImagePath = m_config.coverImagePath.toStdString();
     jobConfig.hashAlgorithm = "BLAKE3";
-
-    // Generate encryption key if enabled
-    if (m_config.enableEncryption) {
-        noty::KeyManager keyManager;
-        jobConfig.encryptionKey = keyManager.generateKey();
-        jobConfig.encryptionNonce = keyManager.generateNonce();
-    }
 
     // Create job
     noty::RepackJob job(jobConfig);
