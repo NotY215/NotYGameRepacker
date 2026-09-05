@@ -45,9 +45,12 @@ target_include_directories(NotYCore
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         $<INSTALL_INTERFACE:include>
+        ${nlohmann_json_INCLUDE_DIRS}   # Make nlohmann_json include path public
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}/generated
+        ${ZSTD_INCLUDE_DIRS}
+        ${BLAKE3_INCLUDE_DIRS}
 )
 
 # Link dependencies
@@ -55,26 +58,16 @@ target_link_libraries(NotYCore
     PUBLIC
         Qt6::Core
         Qt6::Widgets
+        nlohmann_json::nlohmann_json   # Changed from PRIVATE to PUBLIC
     PRIVATE
-        nlohmann_json::nlohmann_json
         BLAKE3::blake3
-        ${ZSTD_LIBRARIES}
+        $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,zstd::libzstd_shared>
         advapi32
         psapi
 )
 
 # Set C++ standard
 target_compile_features(NotYCore PUBLIC cxx_std_20)
-
-# Include directories for vcpkg dependencies
-target_include_directories(NotYCore
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include
-        ${ZSTD_INCLUDE_DIRS}
-        ${BLAKE3_INCLUDE_DIRS}
-        ${nlohmann_json_INCLUDE_DIRS}
-)
 
 # Add compiler options for the library
 if(MSVC)

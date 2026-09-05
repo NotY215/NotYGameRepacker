@@ -235,7 +235,7 @@ void SetupApplication::onInstallationComplete(bool success, const QString& messa
 
 bool SetupApplication::prepareInstallation()
 {
-    // Set installation directory from window
+    // Get installation directory from the window
     m_installDirectory = m_mainWindow->getInstallDirectory().toStdString();
     m_createDesktopShortcut = m_mainWindow->shouldCreateDesktopShortcut();
     m_createStartMenuShortcut = m_mainWindow->shouldCreateStartMenuShortcut();
@@ -263,6 +263,13 @@ bool SetupApplication::isComponentSelected(const std::string& component) const
 {
     return std::find(m_selectedComponents.begin(), m_selectedComponents.end(),
         component) != m_selectedComponents.end();
+}
+
+void SetupApplication::addSelectedComponent(const std::string& component)
+{
+    if (!isComponentSelected(component)) {
+        m_selectedComponents.push_back(component);
+    }
 }
 
 void SetupApplication::removeSelectedComponent(const std::string& component)

@@ -19,6 +19,9 @@ target_link_libraries(NotYSetup
         Qt6::Gui
 )
 
+# Add include directories for nlohmann_json (needed for ManifestReader.h)
+target_include_directories(NotYSetup PRIVATE ${nlohmann_json_INCLUDE_DIRS})
+
 # Set properties for Windows
 if(WIN32)
     set_target_properties(NotYSetup PROPERTIES
@@ -43,9 +46,6 @@ if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(NotYSetup PRIVATE /Zi)
     target_link_options(NotYSetup PRIVATE /DEBUG)
 endif()
-
-# Add include directories for nlohmann_json
-target_include_directories(NotYSetup PRIVATE ${nlohmann_json_INCLUDE_DIRS})
 
 # Deploy Qt dependencies
 include(QtDeployment)

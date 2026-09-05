@@ -19,6 +19,9 @@ target_link_libraries(NotYRepacker
         Qt6::Gui
 )
 
+# Add include directories for nlohmann_json (if needed)
+target_include_directories(NotYRepacker PRIVATE ${nlohmann_json_INCLUDE_DIRS})
+
 # Set properties for Windows
 if(WIN32)
     set_target_properties(NotYRepacker PROPERTIES
