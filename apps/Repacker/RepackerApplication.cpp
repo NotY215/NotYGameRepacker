@@ -3,6 +3,9 @@
 #include "noty/common/Logger.h"
 #include "noty/core/ResourceManager.h"
 #include "noty/core/PerformanceMonitor.h"
+#include "noty/repacker/RepackEngine.h"
+#include "noty/repacker/RepackJob.h"
+#include "noty/crypto/KeyManager.h"
 #include <QMessageBox>
 #include <QThread>
 
@@ -54,7 +57,7 @@ void RepackerApplication::shutdown()
     noty::Logger::instance().info("Repacker application shut down.");
 }
 
-void RepackerApplication::onRepackStarted(const MainWindow::PackageConfig& config)
+void RepackerApplication::onRepackStarted(const PackageConfig& config)
 {
     if (m_repackEngine) {
         noty::Logger::instance().warning("Repack already in progress");
@@ -120,7 +123,7 @@ void RepackerApplication::onRepackCancelled()
     }
 }
 
-void RepackerApplication::startRepack(const MainWindow::PackageConfig& config)
+void RepackerApplication::startRepack(const PackageConfig& config)
 {
     emit repackStarted(config);
 }

@@ -8,6 +8,9 @@ namespace noty {
     class RepackEngine;
 }
 
+// Register the PackageConfig type for Qt signals
+struct PackageConfig;
+
 class RepackerApplication : public QObject
 {
     Q_OBJECT
@@ -18,16 +21,18 @@ public:
     void initialize();
     void shutdown();
 
-    void startRepack(const MainWindow::PackageConfig& config);
-    void cancelRepack();
     bool isRepacking() const;
 
+public slots:
+    void startRepack(const PackageConfig& config);
+    void cancelRepack();
+
 signals:
-    void repackStarted(const MainWindow::PackageConfig& config);
+    void repackStarted(const PackageConfig& config);
     void repackCancelled();
 
 private slots:
-    void onRepackStarted(const MainWindow::PackageConfig& config);
+    void onRepackStarted(const PackageConfig& config);
     void onRepackCancelled();
 
 private:
@@ -35,3 +40,6 @@ private:
     noty::RepackEngine* m_repackEngine = nullptr;
     QThread* m_repackThread = nullptr;
 };
+
+// Forward declaration of PackageConfig from MainWindow
+struct PackageConfig;

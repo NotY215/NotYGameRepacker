@@ -29,29 +29,32 @@ class QListWidget;
 class QGroupBox;
 QT_END_NAMESPACE
 
+// Package configuration struct (global for signals)
+struct PackageConfig {
+    QString sourceDirectory;
+    QString outputDirectory;
+    QString gameName;
+    QString gameVersion;
+    QString repackerName;
+    QString setupName;
+    QString coverImagePath;
+    int compressionLevel = 19;
+    uint64_t chunkSize = 1024 * 1024 * 1024; // 1GB
+    bool enableEncryption = false;
+    bool includeHiddenFiles = false;
+    bool generateSetup = true;
+    std::vector<std::string> components;
+};
+
+// Register for Qt signal/slot
+Q_DECLARE_METATYPE(PackageConfig)
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-
-    // Package configuration
-    struct PackageConfig {
-        QString sourceDirectory;
-        QString outputDirectory;
-        QString gameName;
-        QString gameVersion;
-        QString repackerName;
-        QString setupName;
-        QString coverImagePath;
-        int compressionLevel = 19;
-        uint64_t chunkSize = 1024 * 1024 * 1024; // 1GB
-        bool enableEncryption = false;
-        bool includeHiddenFiles = false;
-        bool generateSetup = true;
-        std::vector<std::string> components;
-    };
 
     const PackageConfig& getConfig() const { return m_config; }
     uint64_t getTotalSize() const { return m_totalSize; }

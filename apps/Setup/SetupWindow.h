@@ -32,6 +32,10 @@ public:
     void updateVerificationProgress(int percent, const QString& status);
     void setInstallationComplete(bool success, const QString& message);
 
+    QString getInstallDirectory() const;
+    bool shouldCreateDesktopShortcut() const;
+    bool shouldCreateStartMenuShortcut() const;
+
 signals:
     void installationStarted();
     void installationCancelled();
@@ -123,3 +127,19 @@ private:
     QString m_repackerName;
     uint64_t m_packageSize = 0;
 };
+
+// Inline implementations
+inline QString SetupWindow::getInstallDirectory() const
+{
+    return m_installDirEdit ? m_installDirEdit->text() : QString();
+}
+
+inline bool SetupWindow::shouldCreateDesktopShortcut() const
+{
+    return false; // Default
+}
+
+inline bool SetupWindow::shouldCreateStartMenuShortcut() const
+{
+    return false; // Default
+}

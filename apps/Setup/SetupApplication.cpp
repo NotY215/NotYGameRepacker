@@ -10,8 +10,8 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QDir>
-#include <filesystem>
 #include <QCoreApplication>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -50,11 +50,11 @@ bool SetupApplication::initialize()
     m_packagePath = appPath.toStdString();
 
     // Check if manifest exists in the same directory
-    std::string manifestPath = m_packagePath + "/" + noty::Constants::MANIFEST_FILENAME;
+    std::string manifestPath = m_packagePath + "/" + noty::MANIFEST_FILENAME;
     if (!fs::exists(manifestPath)) {
         // Try parent directory
         fs::path parentPath = fs::path(m_packagePath).parent_path();
-        manifestPath = (parentPath / noty::Constants::MANIFEST_FILENAME).string();
+        manifestPath = (parentPath / noty::MANIFEST_FILENAME).string();
         if (fs::exists(manifestPath)) {
             m_packagePath = parentPath.string();
         }
@@ -97,7 +97,7 @@ void SetupApplication::shutdown()
 bool SetupApplication::loadPackageInfo()
 {
     try {
-        std::string manifestPath = m_packagePath + "/" + noty::Constants::MANIFEST_FILENAME;
+        std::string manifestPath = m_packagePath + "/" + noty::MANIFEST_FILENAME;
         if (!fs::exists(manifestPath)) {
             m_lastError = "Manifest not found: " + manifestPath;
             return false;
@@ -117,9 +117,6 @@ bool SetupApplication::loadPackageInfo()
         m_gameVersion = QString::fromStdString(info.gameVersion);
         m_repackerName = QString::fromStdString(info.repackerName);
         m_packageSize = info.originalSize;
-
-        // Check if encryption is enabled
-        m_encryptionEnabled = (info.encryptionMethod != "None");
 
         noty::Logger::instance().info("Package info loaded: " + info.gameName +
             " v" + info.gameVersion);
@@ -163,9 +160,6 @@ void SetupApplication::startInstallation()
     config.createDesktopShortcut = m_createDesktopShortcut;
     config.createStartMenuShortcut = m_createStartMenuShortcut;
     config.selectedComponents = m_selectedComponents;
-    config.enableEncryption = m_encryptionEnabled;
-    config.encryptionKey = m_encryptionKey;
-    config.encryptionNonce = m_encryptionNonce;
 
     // Create job
     noty::InstallJob job(config);
@@ -221,14 +215,6 @@ void SetupApplication::onInstallationProgress(int percent, const QString& status
 
     if (m_mainWindow) {
         m_mainWindow->updateProgress(percent, status);
-
-        // Update ETA and throughput if available
-        auto& monitor = noty::PerformanceMonitor::instance();
-        if (monitor.isETAStable()) {
-            QString eta = QString::fromStdString(monitor.getETAString());
-            QString throughput = QString::fromStdString(monitor.getThroughputString());
-            m_mainWindow->updateProgress(percent, status + " (ETA: " + eta + ")");
-        }
     }
 }
 
@@ -245,5 +231,46 @@ void SetupApplication::onInstallationComplete(bool success, const QString& messa
     }
     else {
         noty::Logger::instance().error("Installation failed: " + message.toStdString());
+    }
+}
+
+bool SetupApplication::prepareInstallation()
+{
+    // Set installation directory from window
+    m_installDirectory = m_mainWindow->getInstallDirectory().toStdString();
+    m_createDesktopShortcut = m_mainWindow->shouldCreateDesktopShortcut();
+    m_createStartMenuShortcut = m_mainWindow->shouldCreateStartMenuShortcut();
+
+    if (m_installDirectory.empty()) {
+        m_lastError = "No installation directory selected";
+        return false;
+    }
+
+    // Create directory if it doesn't exist
+    try {
+        if (!fs::exists(m_installDirectory)) {
+            fs::create_directories(m_installDirectory);
+        }
+    }
+    catch (const std::exception& e) {
+        m_lastError = "Failed to create installation directory: " + std::string(e.what());
+        return false;
+    }
+
+    return true;
+}
+
+bool SetupApplication::isComponentSelected(const std::string& component) const
+{
+    return std::find(m_selectedComponents.begin(), m_selectedComponents.end(),
+        component) != m_selectedComponents.end();
+}
+
+void SetupApplication::removeSelectedComponent(const std::string& component)
+{
+    auto it = std::find(m_selectedComponents.begin(), m_selectedComponents.end(),
+        component);
+    if (it != m_selectedComponents.end()) {
+        m_selectedComponents.erase(it);
     }
 }

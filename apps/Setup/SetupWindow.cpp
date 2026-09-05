@@ -163,7 +163,7 @@ void SetupWindow::setupWelcomePage()
     // Game name
     auto* gameNameLabel = new QLabel(m_gameName.isEmpty() ? "Game Package" : m_gameName, this);
     gameNameLabel->setAlignment(Qt::AlignCenter);
-    QFont gameFont("Rubik", 18, QFont::SemiBold);
+    QFont gameFont("Rubik", 18, QFont::DemiBold);
     gameNameLabel->setFont(gameFont);
     gameNameLabel->setStyleSheet("color: #4CAF50;");
     layout->addWidget(gameNameLabel);

@@ -220,7 +220,7 @@ void MainWindow::setupSourcePage()
 
     // Title
     auto* title = new QLabel("Source Directory", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, 600);
     title->setFont(titleFont);
     layout->addWidget(title);
 
@@ -308,7 +308,7 @@ void MainWindow::setupCoverPage()
 
     // Title
     auto* title = new QLabel("Game Cover", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, 600);
     title->setFont(titleFont);
     layout->addWidget(title);
 
@@ -373,7 +373,7 @@ void MainWindow::setupConfigurationPage()
 
     // Title
     auto* title = new QLabel("Package Configuration", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, 600);
     title->setFont(titleFont);
     layout->addWidget(title);
 
@@ -530,7 +530,7 @@ void MainWindow::setupReviewPage()
 
     // Title
     auto* title = new QLabel("Review Configuration", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, 600);
     title->setFont(titleFont);
     layout->addWidget(title);
 
@@ -622,7 +622,7 @@ void MainWindow::setupProgressPage()
 
     // Title
     auto* title = new QLabel("Repacking in Progress...", this);
-    QFont titleFont("Rubik", 20, QFont::SemiBold);
+    QFont titleFont("Rubik", 20, 600);
     title->setFont(titleFont);
     layout->addWidget(title);
 
@@ -882,7 +882,7 @@ void MainWindow::validateInputs()
     if (m_config.setupName.isEmpty() || !m_config.setupName.endsWith(".exe", Qt::CaseInsensitive)) {
         valid = false;
     }
-
+    bool valid = validateInputs();
     m_nextButton->setEnabled(valid && !m_isRepacking && !m_repackComplete);
 }
 
