@@ -4,6 +4,8 @@
 #include "noty/filesystem/DirectoryScanner.h"
 #include "noty/repacker/RepackEngine.h"
 #include "noty/repacker/RepackJob.h"
+#include "noty/core/ResourceManager.h"
+#include "noty/core/PerformanceMonitor.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -28,7 +30,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QStorageInfo>
-
+#include <QTimer>
 MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent)
     , m_currentPage(WelcomePage)
@@ -846,10 +848,7 @@ void MainWindow::validateInputs()
     // Source directory
     if (!m_config.sourceDirectory.isEmpty()) {
         QFileInfo info(m_config.sourceDirectory);
-        if (info.exists() && info.isDir()) {
-            // Valid source
-        }
-        else {
+        if (!(info.exists() && info.isDir())) {
             valid = false;
         }
     }
@@ -1036,17 +1035,22 @@ void MainWindow::startRepacking()
     // Start repacking in a separate thread
     QThread* thread = new QThread(this);
     auto* engine = new noty::RepackEngine();
-    engine->moveToThread(thread);
 
-    connect(thread, &QThread::started, [engine, job = std::move(job)]() mutable {
+    // Use resource manager for optimal settings
+    auto& resourceManager = noty::ResourceManager::instance();
+    engine->setThreadPoolSize(resourceManager.getThreadPoolSize());
+    engine->setCompressionBufferSize(resourceManager.getCompressionBufferSize());
+
+    connect(thread, &QThread::started, [this, engine, job = std::move(job)]() mutable {
         engine->startJob(std::move(job));
-        });
+    });
 
-    connect(thread, &QThread::finished, engine, &QObject::deleteLater);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-
-    // Store engine pointer for cancellation
-    // In a real implementation, we'd store this in a member
+    connect(thread, &QThread::finished, [this, engine, thread]() {
+        delete engine;
+        thread->deleteLater();
+        // Check if repack was successful
+        onRepackComplete(true, "Repack completed successfully!");
+    });
 
     thread->start();
 

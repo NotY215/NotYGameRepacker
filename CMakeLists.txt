@@ -18,23 +18,20 @@ include(CompilerOptions)
 include(Dependencies)
 include(QtDeployment)
 
-# Find Qt6 tools
+# Find Qt6 - includes Core, Widgets, Gui
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
-find_package(Qt6Tools REQUIRED)
 
-# Resource file (includes fonts and icons)
-qt6_add_resources(RESOURCES resources/resources.qrc)
-
-# Find Zstd - use CONFIG mode with REQUIRED
+# Find Zstd
 find_package(zstd CONFIG REQUIRED)
 
-# Find nlohmann_json - use CONFIG mode with REQUIRED
+# Find nlohmann_json
 find_package(nlohmann_json CONFIG REQUIRED)
 
-# Find BLAKE3 - use CONFIG mode with REQUIRED
+# Find BLAKE3
 find_package(blake3 CONFIG REQUIRED)
 
 # Resource file (includes fonts and icons)
+# qt6_add_resources will use the rcc tool from Qt6
 qt6_add_resources(RESOURCES resources/resources.qrc)
 
 # Generate version header
@@ -67,7 +64,6 @@ message(STATUS "========================================")
 # Performance optimization flags for Release builds
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(MSVC)
-        # Enable whole program optimization
         set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
     endif()
 endif()

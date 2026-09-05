@@ -78,7 +78,7 @@ bool SetupApplication::initialize()
 void SetupApplication::shutdown()
 {
     if (m_installEngine) {
-        m_installEngine->shutdown();
+        delete m_installEngine;
         m_installEngine = nullptr;
     }
     if (m_installThread) {
@@ -172,22 +172,21 @@ void SetupApplication::startInstallation()
     // Create engine in a separate thread
     m_installThread = new QThread(this);
     m_installEngine = new noty::InstallEngine();
-    m_installEngine->moveToThread(m_installThread);
 
     // Use resource manager for optimal settings
     auto& resourceManager = noty::ResourceManager::instance();
     m_installEngine->setThreadPoolSize(resourceManager.getThreadPoolSize());
     m_installEngine->setExtractionBufferSize(resourceManager.getDecompressionBufferSize());
 
-    connect(m_installThread, &QThread::started, [this, job = std::move(job)]() mutable {
-        m_installEngine->startJob(std::move(job));
+    noty::InstallEngine* engine = m_installEngine;
+
+    connect(m_installThread, &QThread::started, [this, job = std::move(job), engine]() mutable {
+        engine->startJob(std::move(job));
         });
 
-    connect(m_installThread, &QThread::finished, [this]() {
-        if (m_installEngine) {
-            m_installEngine->deleteLater();
-            m_installEngine = nullptr;
-        }
+    connect(m_installThread, &QThread::finished, [this, engine]() {
+        delete engine;
+        m_installEngine = nullptr;
         m_installationRunning = false;
         noty::PerformanceMonitor::instance().stopOperation();
         });

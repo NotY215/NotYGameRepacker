@@ -73,6 +73,7 @@ target_include_directories(NotYCore
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
         ${ZSTD_INCLUDE_DIRS}
         ${BLAKE3_INCLUDE_DIRS}
+        ${nlohmann_json_INCLUDE_DIRS}
 )
 
 # Add compiler options for the library

@@ -7,6 +7,7 @@
 #include "noty/repacker/RepackJob.h"
 #include <QMessageBox>
 #include <QThread>
+#include <QTimer>
 
 RepackerApplication::RepackerApplication(QObject * parent)
     : QObject(parent)
@@ -44,7 +45,7 @@ void RepackerApplication::initialize()
 void RepackerApplication::shutdown()
 {
     if (m_repackEngine) {
-        m_repackEngine->shutdown();
+        delete m_repackEngine;
         m_repackEngine = nullptr;
     }
     if (m_repackThread) {
@@ -71,14 +72,17 @@ void RepackerApplication::onRepackStarted(const PackageConfig& config)
     // Create repack engine in a separate thread
     m_repackThread = new QThread(this);
     m_repackEngine = new noty::RepackEngine();
-    m_repackEngine->moveToThread(m_repackThread);
 
     // Use resource manager for optimal settings
     auto& resourceManager = noty::ResourceManager::instance();
     m_repackEngine->setThreadPoolSize(resourceManager.getThreadPoolSize());
     m_repackEngine->setCompressionBufferSize(resourceManager.getCompressionBufferSize());
 
-    connect(m_repackThread, &QThread::started, [this, config]() {
+    // Move engine to thread using a lambda since RepackEngine is not a QObject
+    QThread* thread = m_repackThread;
+    noty::RepackEngine* engine = m_repackEngine;
+
+    connect(m_repackThread, &QThread::started, [this, config, engine]() {
         // Create job configuration
         noty::RepackJob::Configuration jobConfig;
         jobConfig.sourceDirectory = config.sourceDirectory.toStdString();
@@ -99,12 +103,12 @@ void RepackerApplication::onRepackStarted(const PackageConfig& config)
         jobConfig.hashAlgorithm = "BLAKE3";
 
         noty::RepackJob job(jobConfig);
-        m_repackEngine->startJob(std::move(job));
+        engine->startJob(std::move(job));
         });
 
     connect(m_repackThread, &QThread::finished, [this]() {
         if (m_repackEngine) {
-            m_repackEngine->deleteLater();
+            delete m_repackEngine;
             m_repackEngine = nullptr;
         }
         noty::PerformanceMonitor::instance().stopOperation();
