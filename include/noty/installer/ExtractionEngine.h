@@ -11,7 +11,6 @@
 namespace noty {
 
     class ZstdDecompressor;
-    class Decryptor;
     class Hasher;
 
     /**
@@ -115,16 +114,10 @@ namespace noty {
             const std::vector<uint8_t>& chunkData);
         bool verifyExtractedFiles(ExtractionContext& ctx);
 
-        bool decompressAndDecryptFile(const std::vector<uint8_t>& encryptedData,
-            const FileEntry& entry,
-            std::vector<uint8_t>& outputData,
-            ExtractionContext& ctx);
-
         void updateProgress(ExtractionContext& ctx, int percent, const std::string& status);
         void updateFileProgress(ExtractionContext& ctx, const std::string& filename, int percent);
 
         std::unique_ptr<ZstdDecompressor> m_decompressor;
-        std::unique_ptr<Decryptor> m_decryptor;
         std::unique_ptr<Hasher> m_hasher;
 
         std::atomic<bool> m_cancelled;
@@ -136,7 +129,6 @@ namespace noty {
         // Buffers for extraction
         std::vector<uint8_t> m_fileBuffer;
         std::vector<uint8_t> m_decompressedBuffer;
-        std::vector<uint8_t> m_decryptedBuffer;
     };
 
 } // namespace noty
