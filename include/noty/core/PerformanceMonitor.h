@@ -134,15 +134,15 @@ namespace noty {
         std::vector<ThroughputSample> m_throughputSamples;
         static constexpr size_t MAX_SAMPLES = 20;
 
-        // Metrics
-        std::atomic<uint64_t> m_currentThroughput{ 0 };
-        std::atomic<double> m_averageThroughput{ 0.0 };
-        std::atomic<uint64_t> m_estimatedTimeRemaining{ 0 };
-        std::atomic<double> m_cpuUsage{ 0.0 };
-        std::atomic<uint64_t> m_memoryUsage{ 0 };
-        std::atomic<uint64_t> m_peakMemoryUsage{ 0 };
-        std::atomic<bool> m_operationActive{ false };
-        std::atomic<bool> m_etaStable{ false };
+        // Metrics - using std::atomic with direct initialization
+        std::atomic<uint64_t> m_currentThroughput{0};
+        std::atomic<double> m_averageThroughput{0.0};
+        std::atomic<uint64_t> m_estimatedTimeRemaining{0};
+        std::atomic<double> m_cpuUsage{0.0};
+        std::atomic<uint64_t> m_memoryUsage{0};
+        std::atomic<uint64_t> m_peakMemoryUsage{0};
+        std::atomic<bool> m_operationActive{false};
+        std::atomic<bool> m_etaStable{false};
 
         // Statistics
         std::vector<OperationStats> m_allStats;

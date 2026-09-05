@@ -213,7 +213,7 @@ namespace noty {
 
         if (totalTime > 0) {
             double avgThroughput = (double)totalBytes / (totalTime / 1000.0);
-            m_averageThroughput.store(avgThroughput);
+            m_averageThroughput = avgThroughput;
         }
     }
 
@@ -229,7 +229,7 @@ namespace noty {
         uint64_t etaMs = static_cast<uint64_t>(remaining / avgThroughput * 1000);
         m_estimatedTimeRemaining = etaMs;
 
-        m_etaStable.store(m_throughputSamples.size() >= 5, std::memory_order_release);
+        m_etaStable = (m_throughputSamples.size() >= 5);
     }
 
     void PerformanceMonitor::updateSystemMemory() {
@@ -237,11 +237,11 @@ namespace noty {
         if (GetProcessMemoryInfo(GetCurrentProcess(),
             reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc))) {
             uint64_t memory = pmc.WorkingSetSize;
-            m_memoryUsage.store(memory);
+            m_memoryUsage = memory;
 
             uint64_t currentPeak = m_peakMemoryUsage.load();
             if (memory > currentPeak) {
-                m_peakMemoryUsage.store(memory);
+                m_peakMemoryUsage = memory;
             }
         }
     }
@@ -264,8 +264,9 @@ namespace noty {
 
                 if (total > 0) {
                     double usage = 100.0 - (100.0 * idleDelta / total);
-                    double clamped = std::max(0.0, std::min(100.0, usage));
-                    m_cpuUsage.store(clamped);
+                    if (usage < 0) usage = 0;
+                    if (usage > 100) usage = 100;
+                    m_cpuUsage = usage;
                 }
             }
 
