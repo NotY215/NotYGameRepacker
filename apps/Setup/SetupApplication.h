@@ -5,6 +5,11 @@
 #include <vector>
 
 class SetupWindow;
+class QThread;
+
+namespace noty {
+    class InstallEngine;
+}
 
 class SetupApplication : public QObject
 {
@@ -91,7 +96,7 @@ private:
     bool m_installationRunning = false;
     bool m_installationCancelled = false;
 
-    // Installation engine and thread
-    class noty::InstallEngine* m_installEngine = nullptr;
+    // Installation engine and thread (forward-declared types)
+    noty::InstallEngine* m_installEngine = nullptr;
     QThread* m_installThread = nullptr;
 };
