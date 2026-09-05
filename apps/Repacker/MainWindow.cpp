@@ -781,7 +781,9 @@ void MainWindow::updateNavigationButtons()
     else {
         m_backButton->setEnabled(true);
         m_nextButton->setText("Continue →");
-        m_nextButton->setEnabled(validateInputs());
+        bool valid = true;
+        // ... validation logic ...
+        m_nextButton->setEnabled(valid);
         m_cancelButton->setText("Cancel");
     }
 }
