@@ -7,6 +7,10 @@ add_executable(NotYRepacker
     ${RESOURCES}
 )
 
+# Enable Qt MOC for header files
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 target_link_libraries(NotYRepacker
     PRIVATE
         NotYCore

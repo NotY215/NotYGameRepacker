@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable Qt automatic MOC and RCC
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 # Set default build type if not specified
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
@@ -31,7 +35,6 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(blake3 CONFIG REQUIRED)
 
 # Resource file (includes fonts and icons)
-# qt6_add_resources will use the rcc tool from Qt6
 qt6_add_resources(RESOURCES resources/resources.qrc)
 
 # Generate version header
