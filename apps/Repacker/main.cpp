@@ -1,29 +1,26 @@
-#include <QApplication>
-#include <QMessageBox>
-#include "RepackerApplication.h"
-#include "noty/common/Logger.h"
+#include "ui/app_window.hpp"
+#include "ui/theme.hpp"
+#include "ui/logo.hpp"
 
-int main(int argc, char* argv[])
-{
-    try {
-        QApplication app(argc, argv);
-        app.setApplicationName("NotY Repacker");
-        app.setOrganizationName("NotY215");
-        app.setApplicationVersion("1.0.0");
+#include <windows.h>
 
-        // Log startup
-        noty::Logger::instance().info("NotY Game Repacker starting...");
+int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR, int) {
+    noty::ui::enable_dpi_awareness();
 
-        RepackerApplication repacker;
-        repacker.initialize();
-
-        int result = app.exec();
-        noty::Logger::instance().info("Application exited normally.");
-        return result;
-    }
-    catch (const std::exception& e) {
-        QMessageBox::critical(nullptr, "Fatal Error",
-            QString("Application failed to start:\n%1").arg(e.what()));
+    noty::ui::GdiPlusSession gdip;
+    if (!gdip.ok()) {
+        MessageBoxW(nullptr,
+                    L"Failed to initialise GDI+.",
+                    L"NotY Game Repacker",
+                    MB_ICONERROR | MB_OK);
         return 1;
     }
+
+    noty::ui::RootWindowSpec spec{
+        L"NotY Game Repacker",
+        L"Powered by NotY215",
+        960, 640
+    };
+
+    return noty::ui::run_root_window(instance, spec);
 }

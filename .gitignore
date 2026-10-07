@@ -1,4 +1,36 @@
-/vcpkg_installed
-/build
-.vs	
-/.vs
+# CMake build output
+/build/
+/out/
+/install/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+# Compiled artifacts (defensive; usually inside build/)
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.tlog
+*.lastbuildstate
+
+# OS
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Keep resource binaries that live outside build/
+!resources/**/*.png
+!resources/**/*.ico
+!resources/**/*.ttf
+!resources/**/*.otf

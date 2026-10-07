@@ -1,72 +1,90 @@
-cmake_minimum_required(VERSION 3.20)
-project(NotYGameRepacker VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.24)
 
-# Enable C++20
+project(NotYGameRepacker
+    VERSION 0.1.0
+    DESCRIPTION "NotY Game Repacker - Powered by NotY215"
+    LANGUAGES C CXX RC
+)
+
+# ---------------------------------------------------------------------------
+# Platform guard
+# ---------------------------------------------------------------------------
+if(NOT WIN32)
+    message(FATAL_ERROR "NotY Game Repacker targets Windows only.")
+endif()
+
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "NotY Game Repacker is x64 only. Configure with -A x64.")
+endif()
+
+# ---------------------------------------------------------------------------
+# Language standards
+# ---------------------------------------------------------------------------
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enable Qt automatic MOC and RCC
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-# Set default build type if not specified
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+# ---------------------------------------------------------------------------
+# Default build type (single-config generators)
+# ---------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo)
 endif()
 
-# Include our custom CMake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# ---------------------------------------------------------------------------
+# Static MSVC runtime for zero-dependency distribution
+# ---------------------------------------------------------------------------
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
-include(CompilerOptions)
-include(Dependencies)
-include(QtDeployment)
-
-# Find Qt6 - includes Core, Widgets, Gui
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
-
-# Find Zstd
-find_package(zstd CONFIG REQUIRED)
-
-# Find nlohmann_json
-find_package(nlohmann_json CONFIG REQUIRED)
-
-# Find BLAKE3
-find_package(blake3 CONFIG REQUIRED)
-
-# Resource file (includes fonts and icons)
-qt6_add_resources(RESOURCES resources/resources.qrc)
-
-# Generate version header
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
-    ${CMAKE_BINARY_DIR}/generated/version.h
-    @ONLY
-)
-
-# Include src directory for libraries
-add_subdirectory(src)
-
-# Include app directories
-add_subdirectory(apps/Repacker)
-add_subdirectory(apps/Setup)
-
-# Install targets
-include(GNUInstallDirs)
-
-# Print build configuration
-message(STATUS "========================================")
-message(STATUS "NotY Game Repacker Build Configuration")
-message(STATUS "========================================")
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
-message(STATUS "Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
-message(STATUS "========================================")
-
-# Performance optimization flags for Release builds
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+# ---------------------------------------------------------------------------
+# Common target configuration helper
+# ---------------------------------------------------------------------------
+function(noty_configure_target target)
+    target_compile_definitions(${target} PRIVATE
+        UNICODE
+        _UNICODE
+        NOMINMAX
+        WIN32_LEAN_AND_MEAN
+    )
     if(MSVC)
-        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
+        target_compile_options(${target} PRIVATE
+            /W4
+            /permissive-
+            /Zc:__cplusplus
+            /Zc:preprocessor
+            /utf-8
+            /MP
+            $<$<CONFIG:Release>:/O2>
+            $<$<CONFIG:Release>:/GL>
+            $<$<CONFIG:RelWithDebInfo>:/O2>
+        )
+        target_link_options(${target} PRIVATE
+            $<$<CONFIG:Release>:/LTCG>
+        )
     endif()
+endfunction()
+
+# ---------------------------------------------------------------------------
+# Resource detection
+# ---------------------------------------------------------------------------
+set(NOTY_RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+file(TO_CMAKE_PATH "${NOTY_RESOURCE_DIR}" NOTY_RESOURCE_DIR_CMAKE)
+
+if(EXISTS "${NOTY_RESOURCE_DIR}/logo.png")
+    set(NOTY_HAS_LOGO ON)
+    message(STATUS "NotY: embedding resources/logo.png")
+else()
+    set(NOTY_HAS_LOGO OFF)
+    message(WARNING "NotY: resources/logo.png not found - building without embedded logo.")
 endif()
+
+# ---------------------------------------------------------------------------
+# Subdirectories
+# ---------------------------------------------------------------------------
+add_subdirectory(src)
+add_subdirectory(apps)

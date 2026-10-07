@@ -1,0 +1,2 @@
+add_subdirectory(Repacker)
+add_subdirectory(Setup)
