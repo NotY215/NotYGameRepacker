@@ -1,319 +1,231 @@
 # NotY Game Repacker
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/NotY215/NotYGameRepacker)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-brightgreen.svg)](https://www.microsoft.com/windows)
-[![License](https://img.shields.io/badge/license-GPL--3.0-red.svg)](LICENSE)
-[![C++](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://isocpp.org/)
+Professional Windows game packaging and installation system for files and games the user legitimately owns.
 
-**Professional Windows Game Packaging/Repacking System**
+**NotY Game Repacker** is a Windows-first C/C++ project by **NotY215**. The project is being built around a compact native architecture using Win32, the Windows SDK, CMake, and MSVC.
 
-NotY Game Repacker is a comprehensive, professional-grade game packaging system for Windows. It compresses, encrypts, and packages game files into the optimized `.noty` format, complete with a professional installer.
+> **Current development status:** The repository is in active development. The native Win32 foundation and build architecture are present, while the complete package/repack/install pipeline is still being implemented. Features are documented as planned until they are actually working.
 
----
+## Project goals
 
-## 🚀 Features
+- Native Windows x64 application
+- C and C++ used according to component responsibility
+- C++20 for application and high-level systems
+- C17 for suitable low-level/backend code
+- Native Win32 UI with an original NotY215 design
+- Streaming and bounded-memory processing for large files
+- Versioned `.noty` package format
+- Safe cancellation and clear error handling
+- Compact, maintainable repository structure
+- Minimal external dependencies
+- No fake or placeholder security, compression, verification, or progress features
 
-### Core Features
-- **Package Games** into optimized `.noty` format
-- **Zstandard Compression** with streaming support (levels 1-22)
-- **AES-256-GCM Encryption** via Windows CNG (authenticated encryption)
-- **BLAKE3 Integrity Verification** for tamper detection
-- **Professional Installer** with modern dark theme
-- **Adaptive Resource Management** based on available RAM
+## Important scope
 
-### Technical Highlights
-- **Streaming Operations** - No loading entire archives into RAM
-- **Multi-threaded Processing** - Parallel compression and encryption
-- **Chunk-based Packaging** - Split packages into configurable chunks
-- **Component Support** - Optional game components
-- **Memory-Efficient** - Bounded buffers adapt to system resources
-- **Progress Reporting** - Real-time ETA and throughput monitoring
+This project is for packaging, distributing, restoring, and verifying files that the user legitimately possesses.
 
-### User Experience
-- **Dark Theme UI** - Professional, eye-friendly interface
-- **Wizard-Based Workflow** - Step-by-step repacking and installation
-- **Live Preview** - Cover image preview during repacking
-- **Detailed Logging** - Real-time progress log for transparency
-- **Keyboard Navigation** - Full keyboard support
-- **ETA & Throughput** - Real-time performance metrics
+It does **not** implement DRM bypassing, license bypassing, activation bypassing, launcher bypassing, or mechanisms intended to defeat legitimate ownership systems.
 
----
+## Current architecture
 
-## 📋 System Requirements
+The current foundation uses:
 
-### Development
-| Component | Requirement |
-|-----------|-------------|
-| OS | Windows 10/11 (64-bit) |
-| IDE | Visual Studio 2026 (Community or higher) |
-| Compiler | MSVC v19.51+ (Visual Studio 2026 toolchain) |
-| CMake | 3.20 or higher |
-| vcpkg | Built-in with Visual Studio 2026 |
+- C
+- C++20
+- Windows SDK
+- Win32 API
+- CMake 3.24+
+- MSVC / Visual Studio 2022
+- Windows x64
+- Windows-native libraries where appropriate
+- Static MSVC runtime configuration for compact distribution
 
-### Runtime
-| Component | Requirement |
-|-----------|-------------|
-| OS | Windows 10/11 (64-bit) |
-| RAM | 4GB minimum (8GB+ recommended) |
-| Disk Space | 100MB for application + game packages |
-| Processor | Multi-core recommended |
+Qt and other large GUI frameworks are not used.
 
----
+The project also avoids adding third-party libraries when the same functionality can reasonably be provided by C/C++ and the Windows platform.
 
-## 📦 Dependencies
+### Cryptography status
 
-All dependencies are managed through **Visual Studio's built-in vcpkg**:
+Cryptography is **not being implemented in the current development stage**.
 
-| Library | Purpose |
-|---------|---------|
-| Qt6 (qtbase) | GUI framework |
-| Zstandard (zstd) | Compression |
-| nlohmann-json | JSON parsing |
-| BLAKE3 (blake3) | Cryptographic hashing |
+The architecture leaves room for future package authentication and confidentiality, but the current project must not claim to provide encryption or authenticated cryptography until a real implementation is completed and tested.
 
-### Qt Features
-- Core, Widgets, Gui
-- Network, Concurrent
-- OpenGL, Freetype
-- Harfbuzz, PNG
+Do not treat an unfinished crypto design as a security feature.
 
----
+## Planned applications
 
-## 🔧 Setup
+### NotY Game Repacker
 
-### 1. Configure vcpkg.json
+The Repacker will eventually provide a workflow similar to:
 
-Create `vcpkg.json` in your project root with the following content:
+Source folder
+-> file scan
+-> metadata collection
+-> manifest generation
+-> processing
+-> chunk generation
+-> Setup generation
+-> package verification
 
-```json
-{
-  "name": "noty-game-repacker",
-  "version": "1.0.0",
-  "description": "Professional Windows game packaging/repacking system",
-  "homepage": "https://github.com",
-  "license": "GPL-3.0 license",
-  "supports": "windows & x64",
-  "builtin-baseline": "set baseline to that repo's HEAD",
-  "dependencies": [
-    {
-      "name": "qtbase",
-      "default-features": false,
-      "features": [
-        "gui",
-        "widgets",
-        "network",
-        "concurrent",
-        "opengl",
-        "freetype",
-        "harfbuzz",
-        "png"
-      ]
-    },
-    "zstd",
-    "nlohmann-json",
-    "blake3"
-  ]
-}
-```
+Heavy work must run outside the UI thread.
 
-### 2. Integrate vcpkg with Visual Studio
+### Generated Setup
 
-Run the following command in Developer Command Prompt for Visual Studio:
+The generated installer is intended to:
 
-```cmd
-vcpkg integrate install
-```
+Load package metadata
+-> validate package structure
+-> select installation directory
+-> check permissions and disk space
+-> extract package data
+-> verify installed files
+-> finish safely
 
-### 3. Install Dependencies
+The generated Setup application must remain generic and must not be hardcoded for a particular game.
 
-```cmd
-"C:\Program Files\Microsoft Visual Studio\18\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows
-```
+## Package direction
 
----
+The project is designed around a custom, versioned `.noty` package format.
 
-## 🏗️ Building
+A package may contain:
 
-### Build in Visual Studio
+- Setup executable
+- Package manifest
+- Game cover
+- One or more numbered package chunks
 
-1. Open the project folder in Visual Studio
-2. CMake will automatically detect the presets
-3. Select the `default` preset
-4. Build the solution
+The binary chunk format is intended to contain versioned metadata such as package identity, chunk identity, sizes, processing method information, integrity information, and payload data.
 
-### Build from Command Line
+The exact on-disk format must be treated as versioned engineering work and should not be considered stable until documented and implemented.
 
-```cmd
-cmake --preset default
-cmake --build build --config Release
-```
+## Large-file and performance goals
 
-### Build Output
+Large files are a core requirement.
 
-- **Repacker**: `build/apps/Repacker/Release/NotYRepacker.exe`
-- **Setup**: `build/apps/Setup/Release/NotYSetup.exe`
+The implementation should:
 
----
+- use 64-bit file sizes and offsets
+- avoid loading whole games into memory
+- use bounded buffers
+- reuse buffers where practical
+- prefer sequential I/O
+- use controlled worker counts
+- keep the UI responsive
+- support safe cancellation
+- adapt resource usage to the workload
 
-## 🎮 Usage
+Correctness and data integrity take priority over benchmark numbers.
 
-### Repacker (Packaging)
-
-1. Launch `NotYRepacker.exe`
-2. Select your game folder
-3. Choose a cover image
-4. Configure package settings
-5. Review and start repacking
-6. Get your `.noty` package
-
-### Installer (Installation)
-
-1. Run `NotYSetup.exe` from package directory
-2. Choose installation location
-3. Select components
-4. Install and verify
-5. Launch the game
-
----
-
-## 📁 Project Structure
+## Repository structure
 
 ```
 NotYGameRepacker/
-├── apps/                    # Applications
-│   ├── Repacker/           # Repacker GUI
-│   └── Setup/              # Installer GUI
-├── include/noty/           # Public headers
-│   ├── common/             # Common utilities
-│   ├── filesystem/         # File operations
-│   ├── package/            # Manifest handling
-│   ├── hashing/            # Cryptographic hashing
-│   ├── compression/        # Zstandard compression
-│   ├── crypto/             # AES encryption
-│   ├── repacker/           # Packaging engine
-│   ├── installer/          # Installation engine
-│   └── core/               # Resource management
-├── src/                    # Implementation
-├── resources/              # Application resources
-│   └── fonts/              # Rubik font family
-├── ui/                     # Qt UI files
-│   ├── repacker/           # Repacker UI
-│   └── installer/          # Installer UI
-├── cmake/                  # CMake modules
-├── CMakeLists.txt          # Main CMake file
-├── CMakePresets.json       # CMake presets
-└── vcpkg.json              # vcpkg dependencies
+├── apps/
+│   ├── Repacker/       # Repacker application
+│   └── Setup/          # Installer application
+├── docs/               # Detailed project documentation
+├── include/            # Public/internal headers
+├── resources/          # Logo, fonts, icons and other assets
+├── src/
+│   ├── core/           # Low-level C/core functionality
+│   └── ui/             # Native Win32 UI foundation
+├── CMakeLists.txt
+├── CMakePresets.json
+├── CMakeSettings.json
+├── LICENSE
+├── README.md
+├── Documentation.md
+├── CODE_OF_CONDUCT.md
+└── REPORTING_GUIDELINES.md
 ```
 
----
+The structure is intentionally compact. New files should be added only when they represent a meaningful responsibility.
 
-## 🔒 Security
+## Build
 
-### Encryption
-- **AES-256-GCM** via Windows CNG
-- Authenticated encryption with tamper detection
-- Secure key management
-- No destructive anti-debugging
+### Requirements
 
-### Integrity
-- **BLAKE3** cryptographic hashing
-- File-level verification
-- Chunk checksums
-- Manifest validation
+- Windows 10 or Windows 11
+- x64 environment
+- Visual Studio 2022 with MSVC and Windows SDK
+- CMake 3.24 or newer
+- Ninja if using the Ninja presets
 
----
+### Visual Studio 2022
 
-## 📊 Performance
+```cmd
+cmake --preset vs2022
+cmake --build --preset release
+```
 
-### Adaptive Resource Management
+### Ninja Release
 
-| Memory Profile | Compression Buffer | Thread Pool |
-|----------------|-------------------|-------------|
-| Conservative (<8GB) | 512 KB | Cores/2 |
-| Moderate (8-16GB) | 1 MB | Cores-1 |
-| High (16-32GB) | 2 MB | All Cores |
-| Aggressive (32+GB) | 4 MB | All Cores |
+```cmd
+cmake --preset ninja-release
+cmake --build --preset ninja-release
+```
 
-### Optimizations
-- Streaming compression/encryption
-- Multi-threaded processing
-- Memory-mapped I/O
-- Parallel compilation
-- Link-time optimization
+### Ninja Debug
 
----
+```cmd
+cmake --preset ninja-debug
+cmake --build --preset ninja-debug
+```
 
-## 📄 License
+See [docs/BUILDING.md](docs/BUILDING.md) for the full build guide.
 
-This project is licensed under the **GPL-3.0 License**. See the [LICENSE](LICENSE) file for details.
+## Documentation
 
----
+- [Documentation index](Documentation.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Building](docs/BUILDING.md)
+- [Development](docs/DEVELOPMENT.md)
+- [Package format](docs/PACKAGE_FORMAT.md)
+- [Security and trust](docs/SECURITY.md)
+- [Roadmap](docs/ROADMAP.md)
+- [User guide](docs/USER_GUIDE.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Reporting Guidelines](REPORTING_GUIDELINES.md)
 
-## 👥 Authors
+## Roadmap
 
-**NotY215** - Project Lead
+The implementation is being developed incrementally:
 
----
+1. Project and native UI foundation
+2. Filesystem and directory scanning
+3. Manifest and package metadata
+4. Streaming processing architecture
+5. Versioned `.noty` package format
+6. Chunking and large-file support
+7. Future security/integrity layer
+8. Installer extraction engine
+9. Installation verification
+10. Repacker UI
+11. Generated Setup UI
+12. Performance and resource tuning
+13. Resume and optional components
+14. Release packaging and documentation
 
-## 🙏 Acknowledgments
+A phase is not considered complete merely because its files or interfaces exist. The functionality must actually work.
 
-- **Qt** - Cross-platform UI framework
-- **Zstandard** - Fast compression
-- **BLAKE3** - Cryptographic hashing
-- **nlohmann/json** - JSON handling
-- **Rubik Font** - Modern typography
+## Development principles
 
----
+- Do not generate the whole codebase at once.
+- Work phase-by-phase.
+- Keep C and C++ responsibilities deliberate.
+- Prefer native Windows functionality.
+- Avoid unnecessary dependencies.
+- Do not silently replace established architecture.
+- Document unfinished functionality clearly.
+- Do not use fake implementations to make a feature appear complete.
+- Never trade correctness or data safety for benchmark results.
 
-## 📞 Support
+## License
 
-### Resources
-- Documentation: `/docs` directory
-- Issues: Contact support via email
+NotY Game Repacker is licensed under the [Apache License 2.0](LICENSE).
 
-### Feedback
-We welcome feedback and suggestions for improvement.
+## Author
 
----
+**NotY215**
 
-## 🗺️ Roadmap
-
-### Completed Features ✅
-- [x] Directory scanning and file enumeration
-- [x] Manifest and metadata system
-- [x] BLAKE3 hashing
-- [x] Zstandard streaming compression
-- [x] AES-256-GCM encryption
-- [x] Package builder and repack engine
-- [x] Installer engine
-- [x] Setup.exe application
-- [x] Repacker UI polish
-- [x] Installer UI polish
-- [x] Performance optimization
-- [x] Build automation
-
-### Future Plans 🔮
-- [ ] Additional compression algorithms
-- [ ] Delta patching support
-- [ ] Network distribution
-- [ ] Steam integration
-- [ ] Linux support (future)
-
----
-
-## 📝 Notes
-
-### Important
-- The project is designed for Windows 10/11 x64 only
-- All dependencies are managed via Visual Studio's built-in vcpkg
-- Qt 6.x is used via vcpkg manifest mode
-
-### Credits
-- **NotY215** - All rights reserved
-- **Rubik Font** - Copyright © 2020, The Rubik Project Authors
-- **Zstandard** - Copyright © 2016-present, Facebook, Inc.
-- **BLAKE3** - Copyright © 2019-2020, The BLAKE3 Team
-
----
-
-**© 2026 NotY215. All Rights Reserved.**
+Powered by NotY215.
