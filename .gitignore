@@ -1,7 +1,7 @@
 # CMake build output
-/build/
-/out/
-/install/
+build/
+out/
+install/
 
 # Visual Studio
 .vs/

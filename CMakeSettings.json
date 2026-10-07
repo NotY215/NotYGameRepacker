@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\build\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=10.0.28000.0",
       "buildCommandArgs": "",
       "ctestCommandArgs": ""
     },
@@ -18,7 +18,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\build\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=10.0.28000.0",
       "buildCommandArgs": "",
       "ctestCommandArgs": ""
     },
@@ -29,17 +29,17 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\build\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=10.0.28000.0",
       "buildCommandArgs": "",
       "ctestCommandArgs": ""
     },
     {
-      "name": "x64-VS2022-Release",
-      "generator": "Visual Studio 17 2022",
+      "name": "x64-VS2026-Release",
+      "generator": "Visual Studio 18 2026",
       "configurationType": "Release",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${projectDir}\\build\\vs2022",
-      "cmakeCommandArgs": "",
+      "buildRoot": "${projectDir}\\build\\vs2026",
+      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=10.0.28000.0",
       "buildCommandArgs": "",
       "ctestCommandArgs": ""
     }

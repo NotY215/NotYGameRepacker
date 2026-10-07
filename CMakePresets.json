@@ -9,60 +9,64 @@
     {
       "name": "base-vs",
       "hidden": true,
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "architecture": "x64",
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_VERSION": "10.0.28000.0"
+      }
     },
     {
-      "name": "vs2022",
-      "displayName": "Visual Studio 2022 (multi-config, x64)",
+      "name": "vs2026",
+      "displayName": "Visual Studio 2026 (multi-config, x64)",
       "inherits": "base-vs"
     },
     {
-      "name": "ninja-release",
-      "displayName": "Ninja x64 Release",
+      "name": "ninja-base",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/ninja-release",
+      "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_SYSTEM_VERSION": "10.0.28000.0"
       }
     },
     {
       "name": "ninja-debug",
       "displayName": "Ninja x64 Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/ninja-debug",
+      "inherits": "ninja-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "ninja-release",
+      "displayName": "Ninja x64 Release",
+      "inherits": "ninja-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "release",
-      "displayName": "Release",
-      "configurePreset": "vs2022",
-      "configuration": "Release"
-    },
-    {
       "name": "debug",
-      "displayName": "Debug",
-      "configurePreset": "vs2022",
+      "displayName": "Debug (VS 2026)",
+      "configurePreset": "vs2026",
       "configuration": "Debug"
     },
     {
-      "name": "relwithdebinfo",
-      "displayName": "RelWithDebInfo",
-      "configurePreset": "vs2022",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "ninja-release",
-      "configurePreset": "ninja-release"
+      "name": "release",
+      "displayName": "Release (VS 2026)",
+      "configurePreset": "vs2026",
+      "configuration": "Release"
     },
     {
       "name": "ninja-debug",
       "configurePreset": "ninja-debug"
+    },
+    {
+      "name": "ninja-release",
+      "configurePreset": "ninja-release"
     }
   ]
 }

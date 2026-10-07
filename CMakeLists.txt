@@ -27,11 +27,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---------------------------------------------------------------------------
-# Default build type (single-config generators)
+# Default build type (single-config generators). Only Debug and Release
+# are supported by this project.
 # ---------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -61,7 +62,6 @@ function(noty_configure_target target)
             /MP
             $<$<CONFIG:Release>:/O2>
             $<$<CONFIG:Release>:/GL>
-            $<$<CONFIG:RelWithDebInfo>:/O2>
         )
         target_link_options(${target} PRIVATE
             $<$<CONFIG:Release>:/LTCG>
