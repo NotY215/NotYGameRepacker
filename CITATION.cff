@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "NotYGameRepacker"
+message: "If you use NotYGameRepacker, please cite this repository."
+type: software
+authors:
+  - given-names: Shreyas
+    family-names: Mishra
+    affiliation: NotY215
+repository-code: "https://github.com/NotY215/NotYGameRepacker"
+url: "https://github.com/NotY215/NotYGameRepacker"
+license: "Apache-2.0"
+version: "current"
